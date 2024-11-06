@@ -2,7 +2,7 @@ package SymbolTable;
 
 import java.util.Hashtable;
 
-class SymbolTable{
+public class SymbolTable{
     private Hashtable<String, String> symbolTabelle = new Hashtable<String, String>();
 
     public void addConstant(String ident, String value) throws SymbolAlreadyDefinedException {

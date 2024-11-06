@@ -1,69 +1,118 @@
-PARSER_BEGIN(P2)
-	public class P2 {
-		public static void main (String args []) {
-			P2 parser = new P2(System.in);
-			try {
-				String result = parser.start();
-				System.out.println(result);
-			} catch (ParseException e) {
-				System.err.println(e);
-			}
-		}
-	}
-PARSER_END(P2)
+options {
+    STATIC = false;
+}
+
+PARSER_BEGIN(P3)
+ public class P3 {
+        private static SymbolTable.SymbolTable symbolTable = new SymbolTable.SymbolTable();
+
+  public static void main (String args []) {
+   P3 parser = new P3(System.in);
+   try {
+    String result = parser.start();
+    System.out.println(result);
+   } catch (ParseException e) {
+    System.err.println(e);
+   }
+  }
+ }
+PARSER_END(P3)
 
 SKIP:
-	{ "\r" | "\n" | "\t" | " " }
+ { "\r" | "\n" | "\t" | " " }
 
 TOKEN:
 {
-	<NUMBER : "0" | ["1"-"9"] (["0"-"9"])* >
+ <FINAL: "final">
+ | <INT: "int">
+ | <SEMIKOLON: ";">
+ | <KOMMA: ",">
+ | <EQUALS: "=">
+ | <KLAMMERAUF: "(">
+ | <KLAMMERZU: ")">
+ | <STRICH : "+" | "-">
+ | <PUNKT: "*" | "/">
+ | <NUMBER : "0" | ["1"-"9"] (["0"-"9"])* >
+ | <IDENT : (["a"-"z"] (["a"-"z"] | ["A"-"Z"] | ["0"-"9"])*) >
 }
 
+void CONSTDECL() :
+{}
+{
+    <FINAL> <INT> CONSTZUW() (<KOMMA> CONSTZUW())* <SEMIKOLON>
+}
+
+void CONSTZUW():
+{ String constName, constValue; }
+{
+    <IDENT>
+    {constName = token.image;}
+    <EQUALS>
+    <NUMBER>
+    {constValue = token.image;}
+    {   try {
+            symbolTable.addConstant(constName, constValue);
+        } catch(Exception e){
+            System.err.println(e.getMessage());
+            throw new Error(e);
+        }
+    }
+}
 
 String EXPRESSION():
 { String left, right, op = null; }
 {
-	left = PRODUKT()
-	(
-		( "+" | "-" )
-		{ op = token.image; }
-		right = PRODUKT()
-		{ left = left + " " + right + " " + op; }
-	)*
-	{ return left; }
+ left = PRODUKT()
+ (
+  <STRICH>
+  { op = token.image; }
+  right = PRODUKT()
+  { left = left + " " + right + " " + op; }
+ )*
+ { return left; }
 }
 
 
 String PRODUKT():
 { String left, right, op = null; }
 {
-	left = TERM()
-	(
-		( "*" | "/" )
-		{ op = token.image; }
-		right = TERM()
-		{ left = left + " " + right + " " + op; }
-	)*
-	{ return left; }
+ left = TERM()
+ (
+  <PUNKT>
+  { op = token.image; }
+  right = TERM()
+  { left = left + " " + right + " " + op; }
+ )*
+ { return left; }
 
 }
 
 
 String TERM():
-{ String result; }
+{ String result, ident; }
 {
-	<NUMBER>
-	{ return token.image; }
-	|
-	"(" result = EXPRESSION() ")"
-	{ return result; }
+ <NUMBER>
+ { return token.image; }
+ |
+ <IDENT>
+ { ident = token.image;
+        try {
+            return symbolTable.getSymbol(ident);
+        } catch(Exception e){
+            System.err.println(e.getMessage());
+            throw new Error(e);
+        }
+    }
+ |
+ <KLAMMERAUF> result = EXPRESSION() <KLAMMERZU>
+ { return result; }
 }
 
 
 String start():
 {}
 {
-	{ String result = EXPRESSION(); }
-	<EOF> { return result; }
+  (CONSTDECL())?
+ { String result = EXPRESSION(); }
+ <EOF> { return result; }
 }
