@@ -1,0 +1,69 @@
+PARSER_BEGIN(P2)
+	public class P2 {
+		public static void main (String args []) {
+			P2 parser = new P2(System.in);
+			try {
+				String result = parser.start();
+				System.out.println(result);
+			} catch (ParseException e) {
+				System.err.println(e);
+			}
+		}
+	}
+PARSER_END(P2)
+
+SKIP:
+	{ "\r" | "\n" | "\t" | " " }
+
+TOKEN:
+{
+	<NUMBER : "0" | ["1"-"9"] (["0"-"9"])* >
+}
+
+
+String EXPRESSION():
+{ String left, right, op = null; }
+{
+	left = PRODUKT()
+	(
+		( "+" | "-" )
+		{ op = token.image; }
+		right = PRODUKT()
+		{ left = left + " " + right + " " + op; }
+	)*
+	{ return left; }
+}
+
+
+String PRODUKT():
+{ String left, right, op = null; }
+{
+	left = TERM()
+	(
+		( "*" | "/" )
+		{ op = token.image; }
+		right = TERM()
+		{ left = left + " " + right + " " + op; }
+	)*
+	{ return left; }
+
+}
+
+
+String TERM():
+{ String result; }
+{
+	<NUMBER>
+	{ return token.image; }
+	|
+	"(" result = EXPRESSION() ")"
+	{ return result; }
+}
+
+
+String start():
+{}
+{
+	{ String result = EXPRESSION(); }
+	<EOF> { return result; }
+}
