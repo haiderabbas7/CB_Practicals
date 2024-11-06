@@ -1,0 +1,41 @@
+1. Geh in den Ordner C:\Stuff\javacc\javacc-javacc-7.0.13\grammars\MY_GRAMMARS
+2. Erstell da einen neuen Ordner für die neue Grammatik
+	zb für eine Übungsaufgabe U2_A12
+3. Erstell im neuen Ordner eine .jj Grammatik-Datei 
+	Soll halt so heißen wie die Grammatik, zb U2_A12
+4. Editiere die Grammatik-Datei nach javacc Regeln
+	Guck dir dazu an wie das in anderen Dateien umgesetzt wurde
+	Der Teil PARSER_BEGIN soll glaube ich immer gleich sein
+		nur halt mit dem Namen der Grammatik gefüttert
+	SKIP Teil entsprechend definieren
+	Und die Token auch entsprechend
+	Ganz unten bei void start(): wird definiert, was der Parser bei Ausführung parsen soll
+		und was er bei EOF, also Erfolg, ausgeben soll
+5. Geh in einem neuen CMD in den Ordner
+	cd C:\Stuff\javacc\javacc-javacc-7.0.13\grammars\MY_GRAMMARS 
+	und dann cd in den neuen Ordner
+6. javacc <Name>.jj auf der Grammatik-Datei ausführen 
+	zb javacc u2_A12.jj
+	kann auch direkt "javacc " eingeben und dann mit TAB vervollständigen lassen, weil da ist nur eine Datei drin
+	ES DÜRFEN KEINE FEHLER PASSIEREN
+7. javac *.java zum Kompilieren aller von javacc erstellten .java Dateien
+	ES DÜRFEN KEINE FEHLER PASSIEREN
+
+
+ZUM PARSEN VON AUSDRÜCKEN:
+1. java <Grammatik-Name> zum Ausführen des Parsers
+2. Ausdruck angeben und dann ENTER drücken
+	Wenn der Ausdruck falsch ist, so wird hier schon eine Exception geworfen
+	Entweder eine Exception, dass eines der eingegebenen Zeichen nicht existiert
+	Oder halt eine ParseException: Ausdruck ist falsch
+3. CTRL-Z (also das EOF Zeichen) eingeben und ENTER drücken
+	Wenn der eingegebene Ausdruck richtig ist, so wird ein Erfolg ausgegeben, den man selber definiert hat
+	
+
+ZUM NEUEN AUFSETZEN DER GRAMMATIK:
+1. alle Dateien außer der .jj Datei löschen
+2. .jj Datei nach Belieben ändern
+3. Schritte oben durchführen zur Übersetzung der Grammatik
+
+
+	
