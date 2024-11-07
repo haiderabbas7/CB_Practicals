@@ -7,13 +7,19 @@ if "%~1"=="" (
     exit /b 1
 )
 
-rem Lösche alle Dateien außer der angegebenen Datei
+rem Überprüfe, ob die angegebene Datei existiert
+if not exist "%~1" (
+    echo Die angegebene Datei %~1 existiert nicht.
+    exit /b 1
+)
+
+rem Lösche alle Dateien außer der angegebenen .jj Datei und anderen .jj Dateien
 for %%f in (*) do (
-    if not "%%f"=="%~1" del "%%f"
+    if not "%%f"=="%~1" if not "%%~xf"==".jj" del "%%f"
 )
 
 rem Führe javacc mit der angegebenen Datei aus
 javacc %~1
 
-rem FUNKTIONIERT NICHT IDFK WHY Kompiliere alle Java-Dateien
+rem Kompiliere alle Java-Dateien
 javac *.java

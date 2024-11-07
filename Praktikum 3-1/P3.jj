@@ -49,14 +49,14 @@ void CONSTZUW():
     {constName = token.image;}
     <EQUALS>
     <NUMBER>
-    {constValue = token.image;}
-    {   try {
-            symbolTable.addConstant(constName, constValue);
-        } catch(Exception e){
-            System.err.println(e.getMessage());
-            throw new Error(e);
-        }
+    {constValue = token.image;
+    try {
+        symbolTable.addConstant(constName, constValue);
+    } catch(Exception e){
+        System.err.println(e.getMessage());
+        throw new Error(e);
     }
+}
 }
 
 String EXPRESSION():
