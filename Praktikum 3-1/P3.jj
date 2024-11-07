@@ -21,25 +21,25 @@ PARSER_END(P3)
 SKIP:
  { "\r" | "\n" | "\t" | " " }
 
-TOKEN:
+TOKEN :
 {
- <FINAL: "final">
- | <INT: "int">
- | <SEMIKOLON: ";">
- | <KOMMA: ",">
- | <EQUALS: "=">
- | <KLAMMERAUF: "(">
- | <KLAMMERZU: ")">
- | <STRICH : "+" | "-">
- | <PUNKT: "*" | "/">
- | <NUMBER : "0" | ["1"-"9"] (["0"-"9"])* >
- | <IDENT : (["a"-"z"] (["a"-"z"] | ["A"-"Z"] | ["0"-"9"])*) >
+  <FINAL : "final">
+| <INT : "int">
+| <PRINT : "print">
+| <IF : "if">
+| <WHILE : "while">
+| <ELSE : "else">
+| <COMPOP : "!=" | "==" | "<=" | ">=" | ">" | "<">
+| <NUMBER : ("0" | ["1"-"9"] (["0"-"9"])*)>
+| <IDENT : (["a"-"z"] (["a"-"z"] | ["A"-"Z"] | ["0"-"9"])*)>
 }
+
+//Programm aus Aufg1 zum Testen: final int i = 5, j = 7; i+3*j
 
 void CONSTDECL() :
 {}
 {
-    <FINAL> <INT> CONSTZUW() (<KOMMA> CONSTZUW())* <SEMIKOLON>
+    <FINAL> <INT> CONSTZUW() ("," CONSTZUW())* ";"
 }
 
 void CONSTZUW():
@@ -47,10 +47,9 @@ void CONSTZUW():
 {
     <IDENT>
     {constName = token.image;}
-    <EQUALS>
+    "="
     <NUMBER>
-    {constValue = token.image;
-    try {
+    {constValue = token.image;    try {
         symbolTable.addConstant(constName, constValue);
     } catch(Exception e){
         System.err.println(e.getMessage());
@@ -64,7 +63,7 @@ String EXPRESSION():
 {
  left = PRODUKT()
  (
-  <STRICH>
+  ("+" | "-")
   { op = token.image; }
   right = PRODUKT()
   { left = left + " " + right + " " + op; }
@@ -78,7 +77,7 @@ String PRODUKT():
 {
  left = TERM()
  (
-  <PUNKT>
+  ("*" | "/")
   { op = token.image; }
   right = TERM()
   { left = left + " " + right + " " + op; }
@@ -104,10 +103,11 @@ String TERM():
         }
     }
  |
- <KLAMMERAUF> result = EXPRESSION() <KLAMMERZU>
+ "(" result = EXPRESSION() ")"
  { return result; }
 }
 
+//Programm aus Aufg1 zum Testen: final int i = 5, j = 7; i+3*j
 
 String start():
 {}
