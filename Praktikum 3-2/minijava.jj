@@ -1,0 +1,147 @@
+/* Code aus P2 A1 zum Testen:
+final int n = 5; int a = 0, b = 1, c = 0, index = 1; { while index < n{ c = b + a; a = b; b = c; index = index + 1; } print(b); }
+*/
+
+PARSER_BEGIN(minijava)
+	public class minijava {
+		public static void main (String args []) {
+			minijava parser = new minijava(System.in);
+			try {
+				parser.start();
+			} catch (ParseException e) {
+				System.err.println(e);
+			}
+		}
+	}
+PARSER_END(minijava)
+
+SKIP:
+{
+  " " | "\t" | "\n" | "\r"
+}
+
+TOKEN :
+{
+  <FINAL : "final">
+| <INT : "int">
+| <PRINT : "print">
+| <IF : "if">
+| <WHILE : "while">
+| <ELSE : "else">
+| <COMPOP : "!=" | "==" | "<=" | ">=" | ">" | "<">
+| <NUMBER : ("0" | ["1"-"9"] (["0"-"9"])*)>
+| <IDENT : (["a"-"z"] (["a"-"z"] | ["A"-"Z"] | ["0"-"9"])*)>
+}
+
+void PROGRAM():
+{}
+{
+    CONSTDECL() VARDECL() STATEMENT()
+}
+
+void CONSTDECL() :
+{}
+{
+    (<FINAL> <INT> CONSTZUW() CONSTLIST() ";")?
+}
+
+void CONSTZUW():
+{}
+{
+    <IDENT> "=" <NUMBER>
+}
+
+void CONSTLIST():
+{}
+{
+    ("," CONSTZUW())*
+}
+
+void VARDECL():
+{}
+{
+    (<INT> <IDENT> VARZUW() VARLIST() ";")?
+}
+
+void VARZUW():
+{}
+{
+    ("=" <NUMBER>)?
+}
+
+void VARLIST():
+{}
+{
+    ("," <IDENT> VARZUW()) *
+}
+
+void EXPRESSION():
+{}
+{
+    TERM() SUMME()
+}
+
+void SUMME():
+{}
+{
+    (("+" | "-") TERM())*
+}
+
+void TERM():
+{}
+{
+    FAKTOR() PRODUCT()
+}
+
+void PRODUCT():
+{}
+{
+    (("*" | "/") TERM())*
+}
+
+void FAKTOR():
+{}
+{
+    <NUMBER>
+    | <IDENT>
+    | "(" EXPRESSION() ")"
+}
+
+void CONDITION():
+{}
+{
+    EXPRESSION() <COMPOP> EXPRESSION()
+}
+
+void STATEMENT():
+{}
+{
+    <IDENT> "=" EXPRESSION() ";"
+    | <PRINT> "(" EXPRESSION() ")" ";"
+    | "{" STMTLIST() "}"
+    | <IF> CONDITION() STATEMENT() OPTELSE()
+    | <WHILE> CONDITION() STATEMENT()
+}
+
+void STMTLIST():
+{}
+{
+    (STATEMENT())*
+}
+
+void OPTELSE():
+{}
+{
+    (<ELSE> STATEMENT())?
+}
+
+
+void start():
+{}
+{
+  PROGRAM() <EOF> { System.out.println("Programm syntaktisch ok!"); }
+}
+
+/* Code aus P2 A1 zum Testen:
+final int n = 5; int a = 0, b = 1, c = 0, index = 1; { while index < n{ c = b + a; a = b; b = c; index = index + 1; } print(b); }
+*/
