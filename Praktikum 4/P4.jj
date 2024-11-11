@@ -1,0 +1,150 @@
+/* Code aus P2 A1 zum Testen:
+final int n = 5; int a = 0, b = 1, c = 0, index = 1; { while index < n{ c = b + a; a = b; b = c; index = index + 1; } print(b); }
+*/
+
+PARSER_BEGIN(minijavaexp)
+	public class minijavaexp {
+        private static SymbolTable.SymbolTable symbolTable = new SymbolTable.SymbolTable();
+
+		public static void main (String args []) {
+			minijavaexp parser = new minijavaexp(System.in);
+			try {
+				parser.start();
+			} catch (ParseException e) {
+				System.err.println(e);
+			}
+		}
+	}
+PARSER_END(minijavaexp)
+
+SKIP:
+{
+  " " | "\t" | "\n" | "\r"
+}
+
+TOKEN :
+{
+  <FINAL : "final">
+| <INT : "int">
+| <PRINT : "print">
+| <IF : "if">
+| <WHILE : "while">
+| <ELSE : "else">
+| <COMPOP : "!=" | "==" | "<=" | ">=" | ">" | "<">
+| <NUMBER : ("0" | ["1"-"9"] (["0"-"9"])*)>
+| <IDENT : (["a"-"z"] (["a"-"z"] | ["A"-"Z"] | ["0"-"9"])*)>
+}
+
+void PROGRAM():
+{}
+{
+    CONSTDECL() VARDECL() STATEMENT()
+}
+
+void CONSTDECL() :
+{}
+{
+    (<FINAL> <INT> CONSTZUW() CONSTLIST() ";")?
+}
+
+void CONSTZUW():
+{ String constName, constValue; }
+{
+    <IDENT>
+    {constName = token.image;}
+    "="
+    <NUMBER>
+    {constValue = token.image;
+        try {
+          symbolTable.addConstant(constName, constValue);
+        } catch(Exception e){
+          System.err.println(e.getMessage());
+          throw new Error(e);
+        }
+    }
+}
+
+void CONSTLIST():
+{}
+{
+    ("," CONSTZUW())*
+}
+
+void VARDECL():
+{}
+{
+    (<INT> VARZUW() VARLIST() ";")?
+}
+
+//ICH HAB HIER <IDENT> MIT IN VARZUW GENOMMEN DAMIT EINFACHER
+void VARZUW():
+{String varName, varValue; }
+{
+    <IDENT>
+    {varName = token.image;}
+    //HIER VLLT UMSTELLEN UND BEIDE IN EIN ? PACKEN
+    ("=")?
+    (<NUMBER>
+    { varValue = token.image;
+        try{
+            symbolTable.addVariable(constName, constValue);
+        } catch(Exception e){
+            System.err.println(e.getMessage());
+            throw new Error(e);
+        }
+    })?
+}
+
+void VARLIST():
+{}
+{
+    ("," VARZUW()) *
+}
+
+void EXPRESSION():
+{}
+{
+    TERM() SUMME()
+}
+
+void SUMME():
+{}
+{
+    (("+" | "-") TERM())*
+}
+
+void TERM():
+{}
+{
+    FAKTOR() PRODUCT()
+}
+
+void PRODUCT():
+{}
+{
+    (("*" | "/") TERM())*
+}
+
+void FAKTOR():
+{}
+{
+    <NUMBER>
+    | <IDENT>
+    | "(" EXPRESSION() ")"
+}
+
+void STATEMENT():
+{}
+{
+    <PRINT> "(" EXPRESSION() ")" ";"
+}
+
+void start():
+{}
+{
+  PROGRAM() <EOF> { System.out.println("Programm syntaktisch ok!"); }
+}
+
+/* Code aus P2 A1 zum Testen:
+final int n = 5; int a = 0, b = 1, c = 0, index = 1; { while index < n{ c = b + a; a = b; b = c; index = index + 1; } print(b); }
+*/
