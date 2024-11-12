@@ -132,6 +132,20 @@ string FAKTOR():
     { value = token.image;
       return "10 " + Integer.toHexString(Integer.parseInt(value));}
     | <IDENT>
+    { ident = token.image;
+        try {
+            Symbol s = symbolTable.getSymbol(ident);
+            if(s.getType() == VARIABLE){
+                return "10 " + Integer.toHexString(Integer.parseInt(s.value));
+            }
+            else if(s.getType() == CONSTANT){
+
+            }
+        } catch(Exception e){
+            System.err.println(e.getMessage());
+            throw new Error(e);
+        }
+    }
     | "(" EXPRESSION() ")"
 }
 
