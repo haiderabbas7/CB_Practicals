@@ -125,10 +125,12 @@ void PRODUCT():
     (("*" | "/") TERM())*
 }
 
-void FAKTOR():
+string FAKTOR():
 {}
 {
     <NUMBER>
+    { value = token.image;
+      return "10 " + Integer.toHexString(Integer.parseInt(value));}
     | <IDENT>
     | "(" EXPRESSION() ")"
 }
