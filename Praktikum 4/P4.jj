@@ -97,7 +97,7 @@ String VARZUW():
         try{
             String varIndex = symbolTable.addVariable(varName);
             //varValue wird hier in einen String der Zahl als hexadezimal interpretiert umgewandelt
-            return "10 " + String.format("%02x", Integer.parseInt(varValue)) + " 36 " + varIndex + " ";        }
+            return "10 " + String.format("%02x", Integer.parseInt(varValue)) + " 36 " + varIndex + " ";}
         catch(Exception e){
             System.err.println(e.getMessage());
             throw new Error(e);
@@ -126,35 +126,62 @@ String SUMME():
 {
     {term = "";}
     (("+" | "-")
-    {term = term + TERM();})*
+        {term = term + TERM();}
+    )*
+    {return term;}
 }
 
-void TERM():
-{}
+String TERM():
+{String faktor, product;}
 {
-    FAKTOR() PRODUCT()
+    faktor = FAKTOR()
+    product = PRODUCT()
+    {return faktor + product;}
 }
 
-void PRODUCT():
-{}
+String PRODUCT():
+{String term;}
 {
-    (("*" | "/") TERM())*
+    {term = "";}
+    (("*" | "/")
+        {term = term + TERM();}
+    )*
+    {return term;}
 }
 
-//HIER KOMPLETT NEU SCHREIBEN, WEIL ICH HAB NICHT MEHR DIE KLASSE SYMBOL
-void FAKTOR():
-{}
+
+String FAKTOR():
+{String number, ident, expression;}
 {
     <NUMBER>
+    {number = token.image;
+    return String.format("%02x", Integer.parseInt(number)) + " ";}
     | <IDENT>
-    | "(" EXPRESSION() ")"
+    {ident = token.image;
+    try{
+        boolean isVariable = symbolTable.isVariable(ident);
+        String hashMapValue = symbolTable.getSymbol(ident);
+        if(isVariable){
+            return "15 " + hashMapValue + " ";
+        }
+        else {
+            return "10 " + hashMapValue + " ";
+        }
+    } catch(Exception e){
+            System.err.println(e.getMessage());
+            throw new Error(e);
+    }
+    //vllt weg
+    return "";
+    }
+    | "(" expression = EXPRESSION() ")" { return expression;}
 }
 
-//FÜRS ERSTE NOCH VOID ZUM TESTEN, HIER MUSS AM ENDE NATÜRLICH STRING RETURNED
-void STATEMENT():
-{}
+String STATEMENT():
+{String expression;}
 {
-    <PRINT> "(" EXPRESSION() ")" ";"
+    <PRINT> "(" expression = EXPRESSION() ")" ";"
+    { return expression;}
 }
 
 String start():
