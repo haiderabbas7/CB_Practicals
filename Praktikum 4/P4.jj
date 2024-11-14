@@ -1,21 +1,23 @@
-/* Code aus P2 A1 zum Testen:
-final int n = 5; int a = 0, b = 1, c = 0, index = 1; { while index < n{ c = b + a; a = b; b = c; index = index + 1; } print(b); }
+/* Mein MiniJavaExp Code aus A1 zum Testen:
+final int c = 1; int v = 2; print(c+v*v*v);
 */
 
-PARSER_BEGIN(minijavaexp)
-	public class minijavaexp {
+//PARSER FÜR MINIJAVAEXP
+PARSER_BEGIN(P4)
+	public class P4 {
         private static SymbolTable.SymbolTable symbolTable = new SymbolTable.SymbolTable();
 
 		public static void main (String args []) {
-			minijavaexp parser = new minijavaexp(System.in);
+			P4 parser = new P4(System.in);
 			try {
-				parser.start();
+				String result = parser.start();
+                System.out.println(result);
 			} catch (ParseException e) {
 				System.err.println(e);
 			}
 		}
 	}
-PARSER_END(minijavaexp)
+PARSER_END(P4)
 
 SKIP:
 {
@@ -35,10 +37,13 @@ TOKEN :
 | <IDENT : (["a"-"z"] (["a"-"z"] | ["A"-"Z"] | ["0"-"9"])*)>
 }
 
-void PROGRAM():
-{}
+String PROGRAM():
+{String varDecl, statement;}
 {
-    CONSTDECL() VARDECL() STATEMENT()
+    CONSTDECL()
+    varDecl = VARDECL()
+    statement = STATEMENT()
+    {return varDecl + statement;}
 }
 
 void CONSTDECL() :
@@ -70,47 +75,58 @@ void CONSTLIST():
     ("," CONSTZUW())*
 }
 
-void VARDECL():
-{}
+String VARDECL():
+{String varDecl;}
 {
-    (<INT> VARZUW() VARLIST() ";")?
+    {varDecl = "";}
+    (<INT>
+    {varDecl = VARZUW() + VARLIST();}
+    ";" {return varDecl;})?
+    //EVTL VERSCHÖNERN, IDK WIE DAS MIT ? FUNKTIONIERT
+   {return varDecl;}
 }
 
-//ICH HAB HIER <IDENT> MIT IN VARZUW GENOMMEN DAMIT EINFACHER
-void VARZUW():
+String VARZUW():
 {String varName, varValue; }
 {
     <IDENT>
     {varName = token.image;}
-    //HIER VLLT UMSTELLEN UND BEIDE IN EIN ? PACKEN
     ("=")?
     (<NUMBER>
     { varValue = token.image;
         try{
-            symbolTable.addVariable(constName, constValue);
-        } catch(Exception e){
+            String varIndex = symbolTable.addVariable(varName);
+            //varValue wird hier in einen String der Zahl als hexadezimal interpretiert umgewandelt
+            return "10 " + String.format("%02x", Integer.parseInt(varValue)) + " 36 " + varIndex + " ";        }
+        catch(Exception e){
             System.err.println(e.getMessage());
             throw new Error(e);
         }
     })?
+    { return "";}
 }
 
-void VARLIST():
-{}
+String VARLIST():
+{String varDecl = "";}
 {
-    ("," VARZUW()) *
+    ("," {varDecl = varDecl + VARZUW();})*
+    {return varDecl;}
 }
 
-void EXPRESSION():
-{}
+String EXPRESSION():
+{String term, summe;}
 {
-    TERM() SUMME()
+    term = TERM()
+    summe = SUMME()
+    {return term + summe;}
 }
 
-void SUMME():
-{}
+String SUMME():
+{String term;}
 {
-    (("+" | "-") TERM())*
+    {term = "";}
+    (("+" | "-")
+    {term = term + TERM();})*
 }
 
 void TERM():
@@ -125,42 +141,29 @@ void PRODUCT():
     (("*" | "/") TERM())*
 }
 
-string FAKTOR():
+//HIER KOMPLETT NEU SCHREIBEN, WEIL ICH HAB NICHT MEHR DIE KLASSE SYMBOL
+void FAKTOR():
 {}
 {
     <NUMBER>
-    { value = token.image;
-      return "10 " + Integer.toHexString(Integer.parseInt(value));}
     | <IDENT>
-    { ident = token.image;
-        try {
-            Symbol s = symbolTable.getSymbol(ident);
-            if(s.getType() == VARIABLE){
-                return "10 " + Integer.toHexString(Integer.parseInt(s.value));
-            }
-            else if(s.getType() == CONSTANT){
-
-            }
-        } catch(Exception e){
-            System.err.println(e.getMessage());
-            throw new Error(e);
-        }
-    }
     | "(" EXPRESSION() ")"
 }
 
+//FÜRS ERSTE NOCH VOID ZUM TESTEN, HIER MUSS AM ENDE NATÜRLICH STRING RETURNED
 void STATEMENT():
 {}
 {
     <PRINT> "(" EXPRESSION() ")" ";"
 }
 
-void start():
-{}
+String start():
+{ String result; }
 {
-  PROGRAM() <EOF> { System.out.println("Programm syntaktisch ok!"); }
+    result = PROGRAM()
+    <EOF> { return result; }
 }
 
-/* Code aus P2 A1 zum Testen:
-final int n = 5; int a = 0, b = 1, c = 0, index = 1; { while index < n{ c = b + a; a = b; b = c; index = index + 1; } print(b); }
+/* Mein MiniJavaExp Code aus A1 zum Testen:
+final int c = 1; int v = 2; print(c+v*v*v);
 */
