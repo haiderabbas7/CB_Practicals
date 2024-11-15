@@ -1,5 +1,6 @@
 package SymbolTable;
 
+//Klasse zum besseren Speichern von Symbolen, unterscheidet zwischen Variablen und Konstanten
 public class Symbol {
     private String name;
     private String value;
@@ -19,11 +20,11 @@ public class Symbol {
         return value;
     }
 
-    public boolean isVariable() {
-        return isVariable;
-    }
-
     public void setValue(String value) {
         this.value = value;
+    }
+
+    public boolean isVariable() {
+        return isVariable;
     }
 }
