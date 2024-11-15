@@ -117,36 +117,52 @@ String EXPRESSION():
 {String term, summe;}
 {
     term = TERM()
-    summe = SUMME()
-    {return term + summe;}
+    summe = SUMME(term)
+    {return summe;}
 }
 
-String SUMME():
-{String term;}
+String SUMME(String term):
+{String left, right, op = null;}
 {
-    {term = "";}
-    (("+" | "-")
-        {term = term + TERM();}
+    {left = term;}
+    (
+        ("+" | "-")
+        { op = token.image; }
+        right = TERM()
+        {if(op.equals("+")){
+            left = left + right + "60 ";
+        } else{
+            left = left + right + "64 ";
+        }
+        }
     )*
-    {return term;}
+    {return left;}
 }
 
 String TERM():
 {String faktor, product;}
 {
     faktor = FAKTOR()
-    product = PRODUCT()
-    {return faktor + product;}
+    product = PRODUCT(faktor)
+    {return product;}
 }
 
-String PRODUCT():
-{String term;}
+String PRODUCT(String faktor):
+{String left, right, op = null;}
 {
-    {term = "";}
-    (("*" | "/")
-        {term = term + TERM();}
+    {left = faktor;}
+    (
+        ("*" | "/")
+        { op = token.image; }
+        right = TERM()
+        {if(op.equals("*")){
+            left = left + right + "68 ";
+        } else{
+            left = left + right + "6c ";
+        }
+        }
     )*
-    {return term;}
+    {return left;}
 }
 
 
@@ -181,7 +197,7 @@ String STATEMENT():
 {String expression;}
 {
     <PRINT> "(" expression = EXPRESSION() ")" ";"
-    { return expression;}
+    { return expression + "b8 (print) b1 "; }
 }
 
 String start():

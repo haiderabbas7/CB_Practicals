@@ -21,6 +21,9 @@ public class Main {
         } catch (SymbolAlreadyDefinedException e) {
             System.err.println(e.getMessage());
         }*/
-        System.out.println(Integer.toHexString(Integer.parseInt("17")));
+        //System.out.println(Integer.toHexString(Integer.parseInt("17")));
+        final int c1 = 1, c2 = 2, c3 = 3;
+        int v1 = 5, v2 = 10, v3 = 15;
+        System.out.println((c1 + c2 / (v1*v2-v3)));
     }
 }
