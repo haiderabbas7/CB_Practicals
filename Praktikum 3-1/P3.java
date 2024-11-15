@@ -39,7 +39,8 @@
      constName = token.image;
     jj_consume_token(16);
     jj_consume_token(NUMBER);
-     constValue = token.image;    try {
+     constValue = token.image;
+    try {
         symbolTable.addConstant(constName, constValue);
     } catch(Exception e){
         System.err.println(e.getMessage());

@@ -10,6 +10,7 @@ PARSER_BEGIN(P4)
 		public static void main (String args []) {
 			P4 parser = new P4(System.in);
 			try {
+                //Hier Parser starten und Ergebnis ausgeben
 				String result = parser.start();
                 System.out.println(result);
 			} catch (ParseException e) {
@@ -52,6 +53,7 @@ void CONSTDECL() :
     (<FINAL> <INT> CONSTZUW() CONSTLIST() ";")?
 }
 
+//gleicher Code wie in P3
 void CONSTZUW():
 { String constName, constValue; }
 {
@@ -76,13 +78,11 @@ void CONSTLIST():
 }
 
 String VARDECL():
-{String varDecl;}
+{String varDecl = "";}
 {
-    {varDecl = "";}
     (<INT>
-    {varDecl = VARZUW() + VARLIST();}
-    ";" {return varDecl;})?
-    //EVTL VERSCHÖNERN, IDK WIE DAS MIT ? FUNKTIONIERT
+        {varDecl = VARZUW() + VARLIST();} ";"
+    )?
    {return varDecl;}
 }
 
@@ -187,8 +187,7 @@ String FAKTOR():
             System.err.println(e.getMessage());
             throw new Error(e);
     }
-    //vllt weg
-    return "";
+    //return "";
     }
     | "(" expression = EXPRESSION() ")" { return expression;}
 }
