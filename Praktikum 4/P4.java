@@ -88,22 +88,22 @@
   static final public String VARZUW() throws ParseException {
   String varName, varValue, varIndex, result = "";
     jj_consume_token(IDENT);
-        //fügt die Variable in die Hashtable ein und speichert sich den Index
         varName = token.image;
-        varIndex = symbolTable.addVariable(varName);
+        //fügt die Variable in die Hashtable ein und speichert sich den Index
+        try{
+            varIndex = symbolTable.addVariable(varName);
+                    result = "10 00 36 " + varIndex + " "; //falls danach kein Wert mehr angelegt wird, dann wird mit 0 initialisiert
+        } catch(Exception e){
+             System.err.println(e.getMessage());
+             {if (true) throw new Error(e);}
+        }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case 15:
       jj_consume_token(15);
       jj_consume_token(NUMBER);
+            //Falls variable doch initialisiert wird, dann erstelle hier den passenden code
             varValue = token.image;
-            try{
-                //varValue wird hier in hexadezimal umgewandelt und damit der Code erzeugt
-                result = "10 " + String.format("%02x", Integer.parseInt(varValue)) //zum Laden des Wertes
-                + " 36 " + varIndex + " "; //zum Speichern des Wertes in der Variable
-            } catch(Exception e){
-                System.err.println(e.getMessage());
-                {if (true) throw new Error(e);}
-            }
+            result = "10 " + String.format("%02x", Integer.parseInt(varValue)) + " 36 " + varIndex + " ";
       break;
     default:
       jj_la1[3] = jj_gen;
@@ -135,11 +135,13 @@
   static final public String EXPRESSION() throws ParseException {
   String term, summe;
     term = TERM();
-    summe = SUMME(term);
+    //term wird hier SUMME übergeben, damit der linke Operand in der Methode auch zugänglich ist
+        summe = SUMME(term);
       {if (true) return summe;}
     throw new Error("Missing return statement in function");
   }
 
+//Codeerzeugung genau wie Postfixtrafo aus P3
   static final public String SUMME(String term) throws ParseException {
   String left, right, op = null;
       left = term;
@@ -168,6 +170,7 @@
       }
           op = token.image;
       right = TERM();
+            //60 für Addition, 64 für Multiplikation
             if(op.equals("+")){
                 left = left + right + "60 ";
             } else{
@@ -229,6 +232,7 @@
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case NUMBER:
       jj_consume_token(NUMBER);
+        //im Falle einer Zahl die Zahl einfach alls Hexwert zurückgeben
         number = token.image;
         {if (true) return String.format("%02x", Integer.parseInt(number)) + " ";}
       break;
@@ -236,20 +240,15 @@
       jj_consume_token(IDENT);
         ident = token.image;
         try{
+            //prüft ob der Identifier eine Variable ist
             boolean isVariable = symbolTable.isVariable(ident);
             String hashMapValue = symbolTable.getSymbol(ident);
-            if(isVariable){
-                {if (true) return "15 " + hashMapValue + " ";}
-            }
-            else {
-                {if (true) return "10 " + hashMapValue + " ";}
-            }
+            //Variable = erzeug 15 für LOAD, Konstante = 10 für Laden der Konstante
+            {if (true) return (isVariable ? "15 " : "10 ") + hashMapValue + " ";}
         } catch(Exception e){
-                System.err.println(e.getMessage());
-                {if (true) throw new Error(e);}
+            System.err.println(e.getMessage());
+            {if (true) throw new Error(e);}
         }
-        //return "";
-
       break;
     case 21:
       jj_consume_token(21);

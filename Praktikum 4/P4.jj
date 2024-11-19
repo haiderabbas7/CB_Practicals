@@ -90,26 +90,27 @@ String VARDECL():
 }
 
 String VARZUW():
-{ String varName, varValue, result = ""; }
+{ String varName, varValue, varIndex, result = ""; }
 {
     <IDENT>
     {
         varName = token.image;
+        //fügt die Variable in die Hashtable ein und speichert sich den Index
+        try{
+            varIndex = symbolTable.addVariable(varName);
+            result = "10 00 36 " + varIndex + " "; //falls danach kein Wert mehr angelegt wird, dann wird mit 0 initialisiert
+        } catch(Exception e){
+             System.err.println(e.getMessage());
+             throw new Error(e);
+        }
+
     }
     (
         "=" <NUMBER>
         {
+            //Falls variable doch initialisiert wird, dann erstelle hier den passenden code
             varValue = token.image;
-            try{
-                //fügt die Variable in die Hashtable ein und speichert sich den Index
-                String varIndex = symbolTable.addVariable(varName);
-                //varValue wird hier in hexadezimal umgewandelt und damit der Code erzeugt
-                result = "10 " + String.format("%02x", Integer.parseInt(varValue)) //zum Laden des Wertes
-                + " 36 " + varIndex + " "; //zum Speichern des Wertes in der Variable
-            } catch(Exception e){
-                System.err.println(e.getMessage());
-                throw new Error(e);
-            }
+            result = "10 " + String.format("%02x", Integer.parseInt(varValue)) + " 36 " + varIndex + " ";
         }
     )?
     { return result; }
@@ -181,7 +182,6 @@ String PRODUCT(String faktor):
     )*
     { return left; }
 }
-
 
 String FAKTOR():
 { String number, ident, expression; }
