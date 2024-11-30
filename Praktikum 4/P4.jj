@@ -10,6 +10,7 @@ PARSER_BEGIN(P4)
 		public static void main (String args []) {
 			P4 parser = new P4(System.in);
 			try {
+                //Hier Parser starten und Ergebnis ausgeben
 				String result = parser.start();
                 System.out.println(result);
 			} catch (ParseException e) {
@@ -43,9 +44,10 @@ String PROGRAM():
     CONSTDECL()
     varDecl = VARDECL()
     statement = STATEMENT()
-    {return varDecl + statement;}
+    { return varDecl + statement; }
 }
 
+//Code zu Konstanten ist der gleiche wie in P3
 void CONSTDECL() :
 {}
 {
@@ -56,10 +58,11 @@ void CONSTZUW():
 { String constName, constValue; }
 {
     <IDENT>
-    {constName = token.image;}
+    { constName = token.image; }
     "="
     <NUMBER>
-    {constValue = token.image;
+    {
+        constValue = token.image;
         try {
           symbolTable.addConstant(constName, constValue);
         } catch(Exception e){
@@ -76,127 +79,143 @@ void CONSTLIST():
 }
 
 String VARDECL():
-{String varDecl;}
+{String varDecl = "";}
 {
-    {varDecl = "";}
-    (<INT>
-    {varDecl = VARZUW() + VARLIST();}
-    ";" {return varDecl;})?
-    //EVTL VERSCHÖNERN, IDK WIE DAS MIT ? FUNKTIONIERT
-   {return varDecl;}
+    (
+        <INT>
+        { varDecl = VARZUW() + VARLIST(); }
+        ";"
+    )?
+   { return varDecl; }
 }
 
 String VARZUW():
-{String varName, varValue; }
+{ String varName, varValue, varIndex, result = ""; }
 {
     <IDENT>
-    {varName = token.image;}
-    ("=")?
-    (<NUMBER>
-    { varValue = token.image;
+    {
+        varName = token.image;
+        //fügt die Variable in die Hashtable ein und speichert sich den Index
         try{
-            String varIndex = symbolTable.addVariable(varName);
-            //varValue wird hier in einen String der Zahl als hexadezimal interpretiert umgewandelt
-            return "10 " + String.format("%02x", Integer.parseInt(varValue)) + " 36 " + varIndex + " ";}
-        catch(Exception e){
-            System.err.println(e.getMessage());
-            throw new Error(e);
+            varIndex = symbolTable.addVariable(varName);
+            result = "10 00 36 " + varIndex + " "; //falls danach kein Wert mehr angelegt wird, dann wird mit 0 initialisiert
+        } catch(Exception e){
+             System.err.println(e.getMessage());
+             throw new Error(e);
         }
-    })?
-    { return "";}
+
+    }
+    (
+        "=" <NUMBER>
+        {
+            //Falls variable doch initialisiert wird, dann erstelle hier den passenden code
+            varValue = token.image;
+            result = "10 " + String.format("%02x", Integer.parseInt(varValue)) + " 36 " + varIndex + " ";
+        }
+    )?
+    { return result; }
 }
 
 String VARLIST():
 {String varDecl = "";}
 {
-    ("," {varDecl = varDecl + VARZUW();})*
-    {return varDecl;}
+    (
+        ","
+        { varDecl = varDecl + VARZUW(); }
+    )*
+    { return varDecl; }
 }
 
 String EXPRESSION():
-{String term, summe;}
+{ String term, summe; }
 {
     term = TERM()
+    //term wird hier SUMME übergeben, damit der linke Operand in der Methode auch zugänglich ist
     summe = SUMME(term)
-    {return summe;}
+    { return summe; }
 }
 
+//Codeerzeugung genau wie Postfixtrafo aus P3
 String SUMME(String term):
-{String left, right, op = null;}
+{ String left, right, op = null; }
 {
-    {left = term;}
+    { left = term; }
     (
         ("+" | "-")
         { op = token.image; }
         right = TERM()
-        {if(op.equals("+")){
-            left = left + right + "60 ";
-        } else{
-            left = left + right + "64 ";
-        }
+        {
+            //60 für Addition, 64 für Multiplikation
+            if(op.equals("+")){
+                left = left + right + "60 ";
+            } else{
+                left = left + right + "64 ";
+            }
         }
     )*
-    {return left;}
+    { return left; }
 }
 
 String TERM():
-{String faktor, product;}
+{ String faktor, product; }
 {
     faktor = FAKTOR()
     product = PRODUCT(faktor)
-    {return product;}
+    { return product; }
 }
 
 String PRODUCT(String faktor):
-{String left, right, op = null;}
+{ String left, right, op = null; }
 {
-    {left = faktor;}
+    { left = faktor; }
     (
         ("*" | "/")
         { op = token.image; }
         right = TERM()
-        {if(op.equals("*")){
-            left = left + right + "68 ";
-        } else{
-            left = left + right + "6c ";
-        }
+        {
+            if(op.equals("*")){
+                left = left + right + "68 ";
+            } else{
+                left = left + right + "6c ";
+            }
         }
     )*
-    {return left;}
+    { return left; }
 }
 
-
 String FAKTOR():
-{String number, ident, expression;}
+{ String number, ident, expression; }
 {
     <NUMBER>
-    {number = token.image;
-    return String.format("%02x", Integer.parseInt(number)) + " ";}
-    | <IDENT>
-    {ident = token.image;
-    try{
-        boolean isVariable = symbolTable.isVariable(ident);
-        String hashMapValue = symbolTable.getSymbol(ident);
-        if(isVariable){
-            return "15 " + hashMapValue + " ";
-        }
-        else {
-            return "10 " + hashMapValue + " ";
-        }
-    } catch(Exception e){
+    {
+        //im Falle einer Zahl die Zahl einfach alls Hexwert zurückgeben
+        number = token.image;
+        return String.format("%02x", Integer.parseInt(number)) + " ";
+    }
+    |
+    <IDENT>
+    {
+        ident = token.image;
+        try{
+            //prüft ob der Identifier eine Variable ist
+            boolean isVariable = symbolTable.isVariable(ident);
+            String hashMapValue = symbolTable.getSymbol(ident);
+            //Variable = erzeug 15 für LOAD, Konstante = 10 für Laden der Konstante
+            return (isVariable ? "15 " : "10 ") + hashMapValue + " ";
+        } catch(Exception e){
             System.err.println(e.getMessage());
             throw new Error(e);
+        }
     }
-    //vllt weg
-    return "";
-    }
-    | "(" expression = EXPRESSION() ")" { return expression;}
+    |
+    "(" expression = EXPRESSION() ")" { return expression; }
 }
 
 String STATEMENT():
 {String expression;}
 {
     <PRINT> "(" expression = EXPRESSION() ")" ";"
+    //b8 print für den print-Befehl und b1 für return
     { return expression + "b8 (print) b1 "; }
 }
 

@@ -4,6 +4,7 @@ import java.util.Hashtable;
 
 public class SymbolTable {
     private Hashtable<String, Symbol> symbolTabelle = new Hashtable<String, Symbol>();
+    //globale Variable zum Ermitteln von Speicherindizes
     private static int nextIndex = 0;
 
     public void addConstant(String ident, String value) throws SymbolAlreadyDefinedException {
@@ -20,7 +21,9 @@ public class SymbolTable {
         } else {
             Symbol symbol = new Symbol(ident, Integer.toString(nextIndex), true);
             symbolTabelle.put(ident, symbol);
+            //nächste Variable hat den nächsten Index
             nextIndex++;
+            //stellt sicher dass immer zweistellig zurückgegeben wird
             return String.format("%02d", nextIndex - 1);
         }
     }
@@ -34,6 +37,7 @@ public class SymbolTable {
         }
     }
 
+    //returned für den Identifier, ob das Symbol eine Variable oder Konstante ist
     public boolean isVariable(String ident) throws UnknownSymbolException {
         if (!symbolTabelle.containsKey(ident)) {
             throw new UnknownSymbolException("Symbol " + ident + " wurde nicht definiert.");
