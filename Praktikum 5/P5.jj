@@ -1,5 +1,6 @@
 /* Mein fibonacci Code aus P2 A1 zum testen:
 <NOCH EINFÜGEN>
+Fürs erste noch den MiniJavaExp Code aus P4: final int c = 1; int v = 2; print(c+v*v*v);
 */
 
 
@@ -21,7 +22,7 @@ PARSER_BEGIN(P5)
 				System.err.println(e);
 			}
             JavaClassFileGenerator.MethodObject mainMethod = new JavaClassFileGenerator.MethodObject("main", 1, result);
-            JavaClassFileGenerator.JavaClassFileGenerator classGenerator = new JavaClassFileGenerator.JavaClassFileGenerator("MyGeneratedClass", true, true, true);
+            JavaClassFileGenerator.JavaClassFileGenerator classGenerator = new JavaClassFileGenerator.JavaClassFileGenerator("myClass", true, true, true);
             classGenerator.generateClassFile(mainMethod);
 		}
 	}
@@ -44,8 +45,6 @@ TOKEN :
 | <NUMBER : ("0" | ["1"-"9"] (["0"-"9"])*)>
 | <IDENT : (["a"-"z"] (["a"-"z"] | ["A"-"Z"] | ["0"-"9"])*)>
 }
-
-//TODO: ALLE UNNÖTIGEN PARAMETER ENTFERNEN, WENN NOCH NCIHT GESCHEHEN
 
 String PROGRAM():
 {String varDecl, statement;}
@@ -93,7 +92,7 @@ String VARDECL():
 }
 
 String VARZUW():
-{ String varName, varIndex, result = ""; }
+{ String varName, result = ""; }
 {
     <IDENT>
     {
@@ -179,7 +178,7 @@ String PRODUCT(String faktor):
 }
 
 String FAKTOR():
-{ String number, ident, expression; }
+{ String number, expression; }
 {
     <NUMBER>
     {
@@ -201,7 +200,7 @@ String STATEMENT():
 {
     <PRINT> "(" expression = EXPRESSION() ")" ";"
     //b8 print für den print-Befehl und b1 für return
-    { return expression + "b8 (print) b1 "; }
+    { return expression + "b8 (print) b1"; }
 }
 
 String start():

@@ -21,9 +21,10 @@ public class CodeGenerator {
     }
 
     //gibt den Code zurück, um die Variable zu initialisieren
+    // gibt den Code zurück, um die Variable zu initialisieren
     public String initVariable(String varName, String varValue) {
         try {
-            String varIndex = symbolTable.getSymbolObject(varName).getValue();
+            String varIndex = String.format("%02d", Integer.parseInt(symbolTable.getSymbolObject(varName).getValue()));
             return "10 " + String.format("%02x", Integer.parseInt(varValue)) + " 36 " + varIndex + " ";
         } catch(Exception e){
             System.err.println(e.getMessage());
