@@ -92,7 +92,7 @@
         //fügt die Variable in die Hashtable ein und speichert sich den Index
         try{
             varIndex = symbolTable.addVariable(varName);
-                    result = "10 00 36 " + varIndex + " "; //falls danach kein Wert mehr angelegt wird, dann wird mit 0 initialisiert
+            result = "10 00 36 " + varIndex + " "; //falls danach kein Wert mehr angelegt wird, dann wird mit 0 initialisiert
         } catch(Exception e){
              System.err.println(e.getMessage());
              {if (true) throw new Error(e);}

@@ -1,25 +1,31 @@
-/* Mein MiniJavaExp Code aus A1 zum Testen:
-final int c = 1; int v = 2; print(c+v*v*v);
-Da muss rauskommen: 10 02 36 00 10 01 15 00 15 00 15 00 68 68 60 b8 (print) b1
+/* Mein fibonacci Code aus P2 A1 zum testen:
+<NOCH EINFÜGEN>
 */
 
-//PARSER FÜR MINIJAVAEXP
-PARSER_BEGIN(P4)
-	public class P4 {
-        private static SymbolTable.SymbolTable symbolTable = new SymbolTable.SymbolTable();
+
+//PARSER FÜR MINIJAVA
+PARSER_BEGIN(P5)
+	public class P5 {
+        //Erstellt die SymbolTabelle und übergibt sie dem CodeGenberator
+        private static CodeGeneration.SymbolTable symbolTable = new CodeGeneration.SymbolTable();
+        private static CodeGeneration.CodeGenerator codeGenerator = new CodeGeneration.CodeGenerator(symbolTable);
 
 		public static void main (String args []) {
-			P4 parser = new P4(System.in);
+			P5 parser = new P5(System.in);
+            String result = "";
 			try {
                 //Hier Parser starten und Ergebnis ausgeben
-				String result = parser.start();
+				result = parser.start();
                 System.out.println(result);
 			} catch (ParseException e) {
 				System.err.println(e);
 			}
+            JavaClassFileGenerator.MethodObject mainMethod = new JavaClassFileGenerator.MethodObject("main", 1, result);
+            JavaClassFileGenerator.JavaClassFileGenerator classGenerator = new JavaClassFileGenerator.JavaClassFileGenerator("MyGeneratedClass", true, true, true);
+            classGenerator.generateClassFile(mainMethod);
 		}
 	}
-PARSER_END(P4)
+PARSER_END(P5)
 
 SKIP:
 {
@@ -39,6 +45,8 @@ TOKEN :
 | <IDENT : (["a"-"z"] (["a"-"z"] | ["A"-"Z"] | ["0"-"9"])*)>
 }
 
+//TODO: ALLE UNNÖTIGEN PARAMETER ENTFERNEN, WENN NOCH NCIHT GESCHEHEN
+
 String PROGRAM():
 {String varDecl, statement;}
 {
@@ -56,20 +64,14 @@ void CONSTDECL() :
 }
 
 void CONSTZUW():
-{ String constName, constValue; }
+{ String constName; }
 {
     <IDENT>
     { constName = token.image; }
     "="
     <NUMBER>
     {
-        constValue = token.image;
-        try {
-          symbolTable.addConstant(constName, constValue);
-        } catch(Exception e){
-          System.err.println(e.getMessage());
-          throw new Error(e);
-        }
+        symbolTable.addConstant(constName, token.image);
     }
 }
 
@@ -91,27 +93,19 @@ String VARDECL():
 }
 
 String VARZUW():
-{ String varName, varValue, varIndex, result = ""; }
+{ String varName, varIndex, result = ""; }
 {
     <IDENT>
     {
-        varName = token.image;
         //fügt die Variable in die Hashtable ein und speichert sich den Index
-        try{
-            varIndex = symbolTable.addVariable(varName);
-            result = "10 00 36 " + varIndex + " "; //falls danach kein Wert mehr angelegt wird, dann wird mit 0 initialisiert
-        } catch(Exception e){
-             System.err.println(e.getMessage());
-             throw new Error(e);
-        }
-
+        varName = token.image;
+        result = codeGenerator.declareVariable(varName);
     }
     (
         "=" <NUMBER>
         {
             //Falls variable doch initialisiert wird, dann erstelle hier den passenden code
-            varValue = token.image;
-            result = "10 " + String.format("%02x", Integer.parseInt(varValue)) + " 36 " + varIndex + " ";
+            result = codeGenerator.initVariable(varName, token.image);
         }
     )?
     { return result; }
@@ -196,17 +190,7 @@ String FAKTOR():
     |
     <IDENT>
     {
-        ident = token.image;
-        try{
-            //prüft ob der Identifier eine Variable ist
-            boolean isVariable = symbolTable.isVariable(ident);
-            String hashMapValue = symbolTable.getSymbol(ident);
-            //Variable = erzeug 15 für LOAD, Konstante = 10 für Laden der Konstante
-            return (isVariable ? "15 " : "10 ") + hashMapValue + " ";
-        } catch(Exception e){
-            System.err.println(e.getMessage());
-            throw new Error(e);
-        }
+        return codeGenerator.generateIdentCode(token.image);
     }
     |
     "(" expression = EXPRESSION() ")" { return expression; }
@@ -227,6 +211,6 @@ String start():
     <EOF> { return result; }
 }
 
-/* Mein MiniJavaExp Code aus A1 zum Testen:
-final int c = 1; int v = 2; print(c+v*v*v);
+/* Mein fibonacci Code aus P2 A1 zum testen:
+<NOCH EINFÜGEN>
 */
