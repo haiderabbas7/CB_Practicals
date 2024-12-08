@@ -1,5 +1,5 @@
 /* Mein fibonacci Code aus P2 A1 zum testen:
-<NOCH EINFÜGEN>
+final int n = 5; int a = 0, b = 1, c = 0, index = 1; { while index < n{ c = b + a; a = b; b = c; index = index + 1; } print(b); }
 Fürs erste noch den MiniJavaExp Code aus P4: final int c = 1; int v = 2; print(c+v*v*v);
 */
 
@@ -195,12 +195,43 @@ String FAKTOR():
     "(" expression = EXPRESSION() ")" { return expression; }
 }
 
+void CONDITION():
+{}
+{
+    EXPRESSION() <COMPOP> EXPRESSION()
+}
+
 String STATEMENT():
 {String expression;}
 {
+    <IDENT> "=" EXPRESSION() ";"
+    { return ""; }
+    |
     <PRINT> "(" expression = EXPRESSION() ")" ";"
     //b8 print für den print-Befehl und b1 für return
-    { return expression + "b8 (print) b1"; }
+    { return ""; }
+    |
+    "{" STMTLIST() "}"
+    { return ""; }
+    |
+    <IF> CONDITION() STATEMENT() OPTELSE()
+    { return ""; }
+    |
+    <WHILE> CONDITION() STATEMENT()
+    { return ""; }
+}
+
+void OPTELSE():
+{}
+{
+    (<ELSE> STATEMENT())?
+}
+
+//TODO: DAS KANN MAN SICH EVTL MIT EINEM KLEENE STERN BEI STATEMENT SPAREN IDK
+void STMTLIST():
+{}
+{
+    (STATEMENT())*
 }
 
 String start():
@@ -211,5 +242,6 @@ String start():
 }
 
 /* Mein fibonacci Code aus P2 A1 zum testen:
-<NOCH EINFÜGEN>
+final int n = 5; int a = 0, b = 1, c = 0, index = 1; { while index < n{ c = b + a; a = b; b = c; index = index + 1; } print(b); }
+Fürs erste noch den MiniJavaExp Code aus P4: final int c = 1; int v = 2; print(c+v*v*v);
 */
