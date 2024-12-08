@@ -17,7 +17,7 @@ public class Symbol {
     }
 
     public String getValue() {
-        return value;
+        return String.format("%02x", Integer.parseInt(value));
     }
 
     public void setValue(String value) {

@@ -38,8 +38,7 @@ public class SymbolTable {
         if (!symbolTabelle.containsKey(ident)) {
             throw new UnknownSymbolException("Symbol " + ident + " wurde nicht definiert.");
         } else {
-            String value = symbolTabelle.get(ident).getValue();
-            return String.format("%02x", Integer.parseInt(value));
+            return symbolTabelle.get(ident).getValue();
         }
     }
 
@@ -49,6 +48,25 @@ public class SymbolTable {
         } else {
             Symbol symbol = symbolTabelle.get(ident);
             return symbol;
+        }
+    }
+
+    //returned für den Identifier den Index der Variable, sonst bei Konstante Exception
+    public String getVariable(String ident){
+        try {
+            if (!symbolTabelle.containsKey(ident)) {
+                throw new UnknownSymbolException("Symbol " + ident + " wurde nicht definiert.");
+            } else {
+                Symbol symbol = symbolTabelle.get(ident);
+                if (!symbol.isVariable()) {
+                    throw new UnknownSymbolException("Symbol " + ident + " ist eine Konstante.");
+                } else {
+                    return symbol.getValue();
+                }
+            }
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            throw new Error(e);
         }
     }
 

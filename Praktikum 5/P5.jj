@@ -184,7 +184,8 @@ String FAKTOR():
     {
         //im Falle einer Zahl die Zahl einfach alls Hexwert zurückgeben
         number = token.image;
-        return String.format("%02x", Integer.parseInt(number)) + " ";
+        //ICH HAB HIER EINFACH DEN STRING 10 RANGEPACKT, KANN ZU FEHLERN FÜHREN
+        return "10 " + String.format("%02x", Integer.parseInt(number)) + " ";
     }
     |
     <IDENT>
@@ -202,21 +203,32 @@ void CONDITION():
 }
 
 String STATEMENT():
-{String expression;}
+{String expression = "", ident = "", statement = "";}
 {
-    <IDENT> "=" EXPRESSION() ";"
-    { return ""; }
+    <IDENT>
+    { ident = token.image;}
+    "="
+    expression = EXPRESSION() ";"
+    { return expression + "36 " + symbolTable.getVariable(ident) + " "; }
+
     |
+
     <PRINT> "(" expression = EXPRESSION() ")" ";"
     //b8 print für den print-Befehl und b1 für return
-    { return ""; }
+    { return expression + "b8 (print) b1"; }
+
     |
-    "{" STMTLIST() "}"
-    { return ""; }
+
+    "{" statement = STMTLIST() "}"
+    { return statement; }
+
     |
+
     <IF> CONDITION() STATEMENT() OPTELSE()
     { return ""; }
+
     |
+
     <WHILE> CONDITION() STATEMENT()
     { return ""; }
 }
@@ -227,11 +239,14 @@ void OPTELSE():
     (<ELSE> STATEMENT())?
 }
 
-//TODO: DAS KANN MAN SICH EVTL MIT EINEM KLEENE STERN BEI STATEMENT SPAREN IDK
-void STMTLIST():
-{}
+String STMTLIST():
+{String statement = "", singleStatement = "";}
 {
-    (STATEMENT())*
+    (
+     singleStatement = STATEMENT()
+     {statement = statement + singleStatement;}
+    )*
+    {return statement;}
 }
 
 String start():
@@ -243,5 +258,9 @@ String start():
 
 /* Mein fibonacci Code aus P2 A1 zum testen:
 final int n = 5; int a = 0, b = 1, c = 0, index = 1; { while index < n{ c = b + a; a = b; b = c; index = index + 1; } print(b); }
+Code mit Zuweisungen drin:
+    final int c = 1; int v = 2; v = 3;
+Code mit Zuweisungen und Statementblöcke drin:
+    final int c = 1; int v = 2; { v = 3; print(v);}
 Fürs erste noch den MiniJavaExp Code aus P4: final int c = 1; int v = 2; print(c+v*v*v);
 */
