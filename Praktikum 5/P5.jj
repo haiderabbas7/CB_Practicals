@@ -196,14 +196,17 @@ String FAKTOR():
     "(" expression = EXPRESSION() ")" { return expression; }
 }
 
-void CONDITION():
-{}
+String CONDITION():
+{String left = "", right = "", compOP = "";}
 {
-    EXPRESSION() <COMPOP> EXPRESSION()
+    left = EXPRESSION()
+    <COMPOP> {compOP = token.image;}
+    right = EXPRESSION()
+    { return codeGenerator.generateConditionCode(left, right, compOP);}
 }
 
 String STATEMENT():
-{String expression = "", ident = "", statement = "";}
+{String expression = "", ident = "", statement = "", condition = "", optElse = "";}
 {
     <IDENT>
     { ident = token.image;}
@@ -215,7 +218,7 @@ String STATEMENT():
 
     <PRINT> "(" expression = EXPRESSION() ")" ";"
     //b8 print für den print-Befehl und b1 für return
-    { return expression + "b8 (print) b1"; }
+    { return expression + "b8 (print) "; }
 
     |
 
@@ -224,8 +227,11 @@ String STATEMENT():
 
     |
 
-    <IF> CONDITION() STATEMENT() OPTELSE()
-    { return ""; }
+    <IF>
+    condition = CONDITION()
+    statement = STATEMENT()
+    optElse = OPTELSE()
+    { return condition + codeGenerator.generateIfCode(statement, optElse); }
 
     |
 
@@ -233,10 +239,15 @@ String STATEMENT():
     { return ""; }
 }
 
-void OPTELSE():
-{}
+String OPTELSE():
+{String statement = "";}
 {
-    (<ELSE> STATEMENT())?
+    (
+    <ELSE>
+    statement = STATEMENT()
+    {return statement;}
+    )?
+    {return "";}
 }
 
 String STMTLIST():
@@ -249,11 +260,18 @@ String STMTLIST():
     {return statement;}
 }
 
+/**
+* ACHTUNG: SOLANGE ICH LABELS NICHT AUFLÖSE WIRD IMMER EINE EXCEPTION GEWORFEN
+* WEIL LN und XN keine validen hexadezimalen Zahlen sind
+*/
 String start():
 { String result; }
 {
+    //HIER MÜSSEN DIE ZWEI LABELAUFLÖSUNGS FUNKTIONEN GECALLED WERDEN
     result = PROGRAM()
-    <EOF> { return result; }
+    <EOF> { return result + "b1 "; }
+
+
 }
 
 /* Mein fibonacci Code aus P2 A1 zum testen:
@@ -262,5 +280,9 @@ Code mit Zuweisungen drin:
     final int c = 1; int v = 2; v = 3;
 Code mit Zuweisungen und Statementblöcke drin:
     final int c = 1; int v = 2; { v = 3; print(v);}
+Code mit Zuweisungen, Statementblöcke und if
+    final int c = 1; int v = 2; { if v == 2 print(c); }
+Code mit Zuweisungen, Statementblöcke und if else
+    final int c = 1; int v = 2; { if v == 2 print(1); else print(2); }
 Fürs erste noch den MiniJavaExp Code aus P4: final int c = 1; int v = 2; print(c+v*v*v);
 */
