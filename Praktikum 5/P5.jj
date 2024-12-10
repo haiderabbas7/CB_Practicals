@@ -1,9 +1,3 @@
-/* Mein fibonacci Code aus P2 A1 zum testen:
-final int n = 5; int a = 0, b = 1, c = 0, index = 1; { while index < n{ c = b + a; a = b; b = c; index = index + 1; } print(b); }
-Fürs erste noch den MiniJavaExp Code aus P4: final int c = 1; int v = 2; print(c+v*v*v);
-*/
-
-
 //PARSER FÜR MINIJAVA
 PARSER_BEGIN(P5)
 	public class P5 {
@@ -184,7 +178,6 @@ String FAKTOR():
     {
         //im Falle einer Zahl die Zahl einfach alls Hexwert zurückgeben
         number = token.image;
-        //ICH HAB HIER EINFACH DEN STRING 10 RANGEPACKT, KANN ZU FEHLERN FÜHREN
         return "10 " + String.format("%02x", Integer.parseInt(number)) + " ";
     }
     |
@@ -217,7 +210,6 @@ String STATEMENT():
     |
 
     <PRINT> "(" expression = EXPRESSION() ")" ";"
-    //b8 print für den print-Befehl und b1 für return
     { return expression + "b8 (print) "; }
 
     |
@@ -262,17 +254,11 @@ String STMTLIST():
     {return statement;}
 }
 
-/**
-* ACHTUNG: SOLANGE ICH LABELS NICHT AUFLÖSE WIRD IMMER EINE EXCEPTION GEWORFEN
-* WEIL LN und XN keine validen hexadezimalen Zahlen sind
-*/
 String start():
 { String result; }
 {
-    //HIER MÜSSEN DIE ZWEI LABELAUFLÖSUNGS FUNKTIONEN GECALLED WERDEN
     result = PROGRAM()
-    <EOF> { return result + "b1 "; }
-
+    <EOF> { return codeGenerator.resolveLabels(result); }
 
 }
 

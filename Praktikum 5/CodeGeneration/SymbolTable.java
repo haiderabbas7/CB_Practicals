@@ -7,7 +7,6 @@ public class SymbolTable {
     //globale Variable zum Ermitteln von Speicherindizes
     private static int nextIndex = 0;
 
-    //TODO: idk wie richtig das ist, dass die exception geworfen und direkt gecatched wird
     public void addConstant(String ident, String value) {
         try {
             if (symbolTabelle.containsKey(ident)) {

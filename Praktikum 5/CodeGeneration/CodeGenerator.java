@@ -1,6 +1,7 @@
 package CodeGeneration;
 
 import CodeGeneration.SymbolTable;
+import java.util.Arrays;
 
 public class CodeGenerator {
     private static SymbolTable symbolTable;
@@ -22,9 +23,9 @@ public class CodeGenerator {
     }
 
     //gibt den Code zurück, um die Variable zu initialisieren
-    // gibt den Code zurück, um die Variable zu initialisieren
     public String initVariable(String varName, String varValue) {
         try {
+            //TODO: HIER MUSS ICH GLAUBE ICH STATTDESSEN %02x NUTZEN, PACKS REIN UND TEST AUS
             String varIndex = String.format("%02d", Integer.parseInt(symbolTable.getSymbolObject(varName).getValue()));
             return "10 " + String.format("%02x", Integer.parseInt(varValue)) + " 36 " + varIndex + " ";
         } catch(Exception e){
@@ -47,11 +48,6 @@ public class CodeGenerator {
         }
     }
 
-    //DIESE FUNKTION GENERIERT DAS LABEL NICHT, PASSIERT ES FÜR DEN IF-CODE
-    /*
-    * Hier wird nur der Bytecode für die Auflösung der COndition
-    * und der richtige SPrungbefehel OHNE label erstellt
-    * */
     public String generateConditionCode(String left, String right, String compOP){
         try {
             String res = left + right;
@@ -91,11 +87,11 @@ public class CodeGenerator {
             //LN für Labelanfang, XN für Labelende
             String res = condition;
             int anext = labelGenerator.getLabel();
-            res += "L" + anext + " "  //(JMC) anext
+            res += "00 L" + anext + " "  //(JMC) anext
                     + statement;        //stmt1
             if(optElse != ""){
                 int anext_plus_1 = labelGenerator.getLabel();
-                res += "a7 L" + anext_plus_1 + " "    //JMP anext+1
+                res += "a7 00 L" + anext_plus_1 + " "    //JMP anext+1
                         + "X" + anext + " "           //anext:
                         + optElse                       //stmt2
                         + "X" + anext_plus_1 + " ";       //anext+1:
@@ -118,9 +114,9 @@ public class CodeGenerator {
             int anext_plus_1 = labelGenerator.getLabel();
             String res = "X" + anext + " "      //anext: ...
                     + condition                 //...cond1 und JMC...
-                    + "L" + anext_plus_1 + " "  //...anext+1
+                    + "00 L" + anext_plus_1 + " "  //...anext+1
                     + statement                 //stmt1
-                    + "a7 L" + anext + " "      //JMP anext
+                    + "a7 00 L" + anext + " "      //JMP anext
                     + "X" + anext_plus_1 + " "; //anext+1
             return res;
 
@@ -129,6 +125,47 @@ public class CodeGenerator {
             System.err.println(e.getMessage());
             throw new Error(e);
         }
+    }
+
+    public String resolveLabels(String program){
+        String programString = program;
+        int labelCount = labelGenerator.getLabelCount();
+
+        for(int i = 0; i < labelCount; i++){
+            //er splitted programString in array bei spaces, sodass er nun ein string array hat, WAS EINE KOPIE IST
+            String[] programArray = programString.split(" ");
+            /*mit einer forschleife entfernt er alle weiteren schließenden Labels XN
+		    * also wir sind nun bei Label i, es werden also alle Labels Xi+1 bis Xn entfernt
+		    * die labels X0 bis Xi-1 wurden im vorherigen run ja aufgelöst
+            * */
+            for(int x = i + 1; x < labelCount; x++){
+                final int index = x;
+                programArray = Arrays.stream(programArray)
+                        .filter(s -> !s.equals("X" + index))
+                        .toArray(String[]::new);
+            }
+            //wir holen uns die position von Li und Xi
+            int labelPos = Arrays.asList(programArray).indexOf("L" + i);
+            int destinationPos = Arrays.asList(programArray).indexOf("X" + i);
+            int distance = destinationPos - labelPos;
+            if(distance > 0){
+                distance += 2;
+                String hexDistance = String.format("%02x", distance);
+                programString = programString.replace("L" + i + " ", hexDistance + " ");
+            }
+            else {
+                distance += 2;
+                int positiveDistance = -distance;
+                int hexOffset = 0xFFFF - positiveDistance;
+                String hexDistance = String.format("%04x", hexOffset);
+                hexDistance = hexDistance.substring(0, 2) + " " + hexDistance.substring(2);
+                programString = programString.replace("00 L" + i + " ", hexDistance + " ");
+            }
+
+            //Und im programString dann noch "Xi " entfernen
+            programString = programString.replace("X" + i + " ", "");
+        }
+        return programString;
     }
     /**
      * ACHTUNG: SOLANGE ICH LABELS NICHT AUFLÖSE WIRD IMMER EINE EXCEPTION GEWORFEN
