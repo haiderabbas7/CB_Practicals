@@ -86,25 +86,44 @@ public class CodeGenerator {
     }
 
     //OPTELSE IST AN DIESER STELLE EINFACH DAS STATEMENT DES ELSE BLOCKS
-    public String generateIfCode(String statement, String optElse) {
+    public String generateIfCode(String condition, String statement, String optElse) {
         try {
             //LN für Labelanfang, XN für Labelende
-            String res = "";
-            int ifLabel = labelGenerator.getLabel();
-            res += "L" + ifLabel + " "  //anext
+            String res = condition;
+            int anext = labelGenerator.getLabel();
+            res += "L" + anext + " "  //(JMC) anext
                     + statement;        //stmt1
             if(optElse != ""){
-                int elseLabel = labelGenerator.getLabel();
-                res += "a7 " + "L" + elseLabel + " "    //JMP anext+1
-                        + "L" + ifLabel + " "           //anext:
+                int anext_plus_1 = labelGenerator.getLabel();
+                res += "a7 L" + anext_plus_1 + " "    //JMP anext+1
+                        + "X" + anext + " "           //anext:
                         + optElse                       //stmt2
-                        + "X" + elseLabel + " ";       //anext+1:
+                        + "X" + anext_plus_1 + " ";       //anext+1:
             }
             //FALL kein else block angegeben
             else{
-                res += "X" + ifLabel + " "; //anext:
+                res += "X" + anext + " "; //anext:
             }
             return res;
+        }
+        catch(Exception e){
+            System.err.println(e.getMessage());
+            throw new Error(e);
+        }
+    }
+
+    public String generateWhileCode(String condition, String statement){
+        try {
+            int anext = labelGenerator.getLabel();
+            int anext_plus_1 = labelGenerator.getLabel();
+            String res = "X" + anext + " "      //anext: ...
+                    + condition                 //...cond1 und JMC...
+                    + "L" + anext_plus_1 + " "  //...anext+1
+                    + statement                 //stmt1
+                    + "a7 L" + anext + " "      //JMP anext
+                    + "X" + anext_plus_1 + " "; //anext+1
+            return res;
+
         }
         catch(Exception e){
             System.err.println(e.getMessage());

@@ -231,12 +231,14 @@ String STATEMENT():
     condition = CONDITION()
     statement = STATEMENT()
     optElse = OPTELSE()
-    { return condition + codeGenerator.generateIfCode(statement, optElse); }
+    { return codeGenerator.generateIfCode(condition, statement, optElse); }
 
     |
 
-    <WHILE> CONDITION() STATEMENT()
-    { return ""; }
+    <WHILE>
+    condition = CONDITION()
+    statement = STATEMENT()
+    { return codeGenerator.generateWhileCode(condition, statement); }
 }
 
 String OPTELSE():
@@ -274,8 +276,9 @@ String start():
 
 }
 
-/* Mein fibonacci Code aus P2 A1 zum testen:
-final int n = 5; int a = 0, b = 1, c = 0, index = 1; { while index < n{ c = b + a; a = b; b = c; index = index + 1; } print(b); }
+/*
+Mein fibonacci Code aus P2 A1 zum testen:
+    final int n = 5; int a = 0, b = 1, c = 0, index = 1; { while index < n{ c = b + a; a = b; b = c; index = index + 1; } print(b); }
 Code mit Zuweisungen drin:
     final int c = 1; int v = 2; v = 3;
 Code mit Zuweisungen und Statementblöcke drin:
@@ -284,5 +287,8 @@ Code mit Zuweisungen, Statementblöcke und if
     final int c = 1; int v = 2; { if v == 2 print(c); }
 Code mit Zuweisungen, Statementblöcke und if else
     final int c = 1; int v = 2; { if v == 2 print(1); else print(2); }
-Fürs erste noch den MiniJavaExp Code aus P4: final int c = 1; int v = 2; print(c+v*v*v);
+Code mit Zuweisungen, Statementblöcke, if else und while
+    final int c = 1; int v = 2; { while v == 2 { print(1); print(2);} }
+Code mit ALLEM drin, etwas komplexer
+    {while 1 > 1 {if 1 < 1 print(1); else print(2);}}
 */
