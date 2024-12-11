@@ -133,6 +133,15 @@ public class CodeGenerator {
 
         for(int i = 0; i < labelCount; i++){
             //er splitted programString in array bei spaces, sodass er nun ein string array hat, WAS EINE KOPIE IST
+
+            /**
+             * TODO:
+             * FEHLER HIER:
+             * ICH SPLITTE NACH DEN WHITESPACES
+             * DADURCH WERDEN DIE METHODENAUFRUFE MIT b8 IN EINE STELLE GEPACKT, ALSO EIN BYTE
+             * ABER DIE AUFRUFE SIND JA ZWEI BYTES
+             * */
+
             String[] programArray = programString.split(" ");
             /*mit einer forschleife entfernt er alle weiteren schließenden Labels XN
 		    * also wir sind nun bei Label i, es werden also alle Labels Xi+1 bis Xn entfernt
@@ -149,12 +158,14 @@ public class CodeGenerator {
             int destinationPos = Arrays.asList(programArray).indexOf("X" + i);
             int distance = destinationPos - labelPos;
             if(distance > 0){
+                /**HIER IST HARDCODED*/
                 distance += 2;
                 String hexDistance = String.format("%02x", distance);
                 programString = programString.replace("L" + i + " ", hexDistance + " ");
             }
             else {
-                distance += 2;
+                /**HIER IST HARDCODED*/
+                distance += 4;
                 int positiveDistance = -distance;
                 int hexOffset = 0xFFFF - positiveDistance;
                 String hexDistance = String.format("%04x", hexOffset);
@@ -167,8 +178,4 @@ public class CodeGenerator {
         }
         return programString;
     }
-    /**
-     * ACHTUNG: SOLANGE ICH LABELS NICHT AUFLÖSE WIRD IMMER EINE EXCEPTION GEWORFEN
-     * WEIL LN und XN keine validen hexadezimalen Zahlen sind
-     */
 }

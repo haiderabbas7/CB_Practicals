@@ -258,7 +258,7 @@ String start():
 { String result; }
 {
     result = PROGRAM()
-    <EOF> { return codeGenerator.resolveLabels(result); }
+    <EOF> { return codeGenerator.resolveLabels(result + "b1 "); }
 
 }
 
