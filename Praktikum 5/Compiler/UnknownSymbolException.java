@@ -1,4 +1,4 @@
-package CodeGeneration;
+package Compiler;
 
 public class UnknownSymbolException extends Exception {
 

@@ -1,4 +1,4 @@
-package CodeGeneration;
+package Compiler;
 
 //Klasse zum besseren Speichern von Symbolen, unterscheidet zwischen Variablen und Konstanten
 public class Symbol {

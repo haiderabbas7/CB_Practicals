@@ -1,4 +1,4 @@
-package CodeGeneration;
+package Compiler;
 
 import java.util.Hashtable;
 

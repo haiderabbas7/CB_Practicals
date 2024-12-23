@@ -1,4 +1,4 @@
-package CodeGeneration;
+package Compiler;
 
 public class LabelGenerator {
     private static int nextLabel = 0;

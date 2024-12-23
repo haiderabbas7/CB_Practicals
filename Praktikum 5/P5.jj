@@ -2,8 +2,8 @@
 PARSER_BEGIN(P5)
 	public class P5 {
         //Erstellt die SymbolTabelle und übergibt sie dem CodeGenberator
-        private static CodeGeneration.SymbolTable symbolTable = new CodeGeneration.SymbolTable();
-        private static CodeGeneration.CodeGenerator codeGenerator = new CodeGeneration.CodeGenerator(symbolTable);
+        private static Compiler.SymbolTable symbolTable = new Compiler.SymbolTable();
+        private static Compiler.Compiler compiler = new Compiler.Compiler(symbolTable);
 
 		public static void main (String args []) {
 			P5 parser = new P5(System.in);
@@ -92,13 +92,13 @@ String VARZUW():
     {
         //fügt die Variable in die Hashtable ein und speichert sich den Index
         varName = token.image;
-        result = codeGenerator.declareVariable(varName);
+        result = compiler.declareVariable(varName);
     }
     (
         "=" <NUMBER>
         {
             //Falls variable doch initialisiert wird, dann erstelle hier den passenden code
-            result = codeGenerator.initVariable(varName, token.image);
+            result = compiler.initVariable(varName, token.image);
         }
     )?
     { return result; }
@@ -183,7 +183,7 @@ String FAKTOR():
     |
     <IDENT>
     {
-        return codeGenerator.generateIdentCode(token.image);
+        return compiler.generateIdentCode(token.image);
     }
     |
     "(" expression = EXPRESSION() ")" { return expression; }
@@ -195,7 +195,7 @@ String CONDITION():
     left = EXPRESSION()
     <COMPOP> {compOP = token.image;}
     right = EXPRESSION()
-    { return codeGenerator.generateConditionCode(left, right, compOP);}
+    { return compiler.generateConditionCode(left, right, compOP);}
 }
 
 String STATEMENT():
@@ -223,14 +223,14 @@ String STATEMENT():
     condition = CONDITION()
     statement = STATEMENT()
     optElse = OPTELSE()
-    { return codeGenerator.generateIfCode(condition, statement, optElse); }
+    { return compiler.generateIfCode(condition, statement, optElse); }
 
     |
 
     <WHILE>
     condition = CONDITION()
     statement = STATEMENT()
-    { return codeGenerator.generateWhileCode(condition, statement); }
+    { return compiler.generateWhileCode(condition, statement); }
 }
 
 String OPTELSE():
@@ -258,7 +258,7 @@ String start():
 { String result; }
 {
     result = PROGRAM()
-    <EOF> { return codeGenerator.resolveLabels(result + "b1 "); }
+    <EOF> { return compiler.resolveLabels(result + "b1 "); }
 
 }
 

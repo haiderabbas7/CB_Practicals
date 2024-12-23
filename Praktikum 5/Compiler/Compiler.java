@@ -1,13 +1,14 @@
-package CodeGeneration;
+package Compiler;
 
-import CodeGeneration.SymbolTable;
+import Compiler.SymbolTable;
 import java.util.Arrays;
+import java.util.ArrayList;
 
-public class CodeGenerator {
+public class Compiler {
     private static SymbolTable symbolTable;
     private static LabelGenerator labelGenerator = new LabelGenerator();
 
-    public CodeGenerator(SymbolTable symbolTable) {
+    public Compiler(SymbolTable symbolTable) {
         this.symbolTable = symbolTable;
     }
 
@@ -128,34 +129,36 @@ public class CodeGenerator {
     }
 
     public String resolveLabels(String program){
+        System.out.println("\nPROGRAM VOR AUFLÖSUNG:\n" + program + "\n\n");
         String programString = program;
         int labelCount = labelGenerator.getLabelCount();
 
         for(int i = 0; i < labelCount; i++){
-            //er splitted programString in array bei spaces, sodass er nun ein string array hat, WAS EINE KOPIE IST
+            //WAS HIER GEMACHT WIRD: Bytecode anhand der Whitespaces in Array packen
+            //  aus diesem Array werden dann die Function calls in zwei Dummy-Bytes aufgelöst
+            //  schließlich noch Umwandlung in ArrayList
+            ArrayList<String> programList = new ArrayList<>(
+                    Arrays.asList(
+                            CompilerHelper.splitAllFunctionCalls(
+                                    programString.split(" "))));
 
-            /**
-             * TODO:
-             * FEHLER HIER:
-             * ICH SPLITTE NACH DEN WHITESPACES
-             * DADURCH WERDEN DIE METHODENAUFRUFE MIT b8 IN EINE STELLE GEPACKT, ALSO EIN BYTE
-             * ABER DIE AUFRUFE SIND JA ZWEI BYTES
-             * */
-
-            String[] programArray = programString.split(" ");
             /*mit einer forschleife entfernt er alle weiteren schließenden Labels XN
 		    * also wir sind nun bei Label i, es werden also alle Labels Xi+1 bis Xn entfernt
 		    * die labels X0 bis Xi-1 wurden im vorherigen run ja aufgelöst
             * */
             for(int x = i + 1; x < labelCount; x++){
                 final int index = x;
-                programArray = Arrays.stream(programArray)
-                        .filter(s -> !s.equals("X" + index))
-                        .toArray(String[]::new);
+                for(int y = 0; y < programList.size(); y++){
+                    if(programList.get(y).charAt(0) == 'X'){
+                        programList.remove(y);
+                    }
+                }
             }
             //wir holen uns die position von Li und Xi
-            int labelPos = Arrays.asList(programArray).indexOf("L" + i);
-            int destinationPos = Arrays.asList(programArray).indexOf("X" + i);
+            int labelPos = programList.indexOf("L" + i);
+            System.out.println(i + " labelPos: " + labelPos + "\n");
+            int destinationPos = programList.indexOf("X" + i);
+            System.out.println(i + " destinationPos: " + destinationPos + "\n");
             int distance = destinationPos - labelPos;
             if(distance > 0){
                 /**HIER IST HARDCODED*/
