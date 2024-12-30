@@ -146,17 +146,28 @@ public class Compiler {
 		    * also wir sind nun bei Label i, es werden also alle Labels Xi+1 bis Xn entfernt
 		    * die labels X0 bis Xi-1 wurden im vorherigen run ja aufgelöst
             * */
+
+            /** TODO:
+             * guck dir das hier nochmal genau an
+             * WICHTIG: die L dinger werden ja nicht entfernt weil das "richtige" Bytes sind
+             *      die stehen ja für den Jumpp index, also zb für das a0 00 L1
+             * und für das vorletzte label entferne ich ja das letzte nicht
+             * weil dann wird ja i + 1 gleich label count und er geht nie in die for schleife
+             * guck dir das einfach nochmal an
+             * */
+
+            System.out.println("label count: " + labelCount);
             for(int x = i + 1; x < labelCount; x++){
-                final int index = x;
                 for(int y = 0; y < programList.size(); y++){
                     if(programList.get(y).charAt(0) == 'X'){
                         programList.remove(y);
+                        System.out.println("Temporarily removed " + i);
                     }
                 }
             }
             //wir holen uns die position von Li und Xi
             int labelPos = programList.indexOf("L" + i);
-            System.out.println(i + " labelPos: " + labelPos + "\n");
+            System.out.println(i + " labelPos: " + labelPos);
             int destinationPos = programList.indexOf("X" + i);
             System.out.println(i + " destinationPos: " + destinationPos + "\n");
             int distance = destinationPos - labelPos;
@@ -164,6 +175,7 @@ public class Compiler {
                 distance += 2;
                 String hexDistance = String.format("%02x", distance);
                 programString = programString.replace("L" + i + " ", hexDistance + " ");
+                System.out.println("Replaced " + i + " with " + hexDistance);
             }
             else {
                 distance += 20; //TODO: MAGIC NUMBER HIER AUSBESSERN
@@ -172,6 +184,7 @@ public class Compiler {
                 String hexDistance = String.format("%04x", hexOffset);
                 hexDistance = hexDistance.substring(0, 2) + " " + hexDistance.substring(2);
                 programString = programString.replace("00 L" + i + " ", hexDistance + " ");
+                System.out.println("Replaced " + i + " with " + hexDistance);
             }
 
             //Und im programString dann noch "Xi " entfernen
