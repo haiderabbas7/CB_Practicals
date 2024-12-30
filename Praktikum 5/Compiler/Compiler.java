@@ -161,14 +161,12 @@ public class Compiler {
             System.out.println(i + " destinationPos: " + destinationPos + "\n");
             int distance = destinationPos - labelPos;
             if(distance > 0){
-                /**HIER IST HARDCODED*/
                 distance += 2;
                 String hexDistance = String.format("%02x", distance);
                 programString = programString.replace("L" + i + " ", hexDistance + " ");
             }
             else {
-                /**HIER IST HARDCODED*/
-                distance += 4;
+                distance += 20; //TODO: MAGIC NUMBER HIER AUSBESSERN
                 int positiveDistance = -distance;
                 int hexOffset = 0xFFFF - positiveDistance;
                 String hexDistance = String.format("%04x", hexOffset);
