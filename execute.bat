@@ -34,6 +34,9 @@ for %%f in (*) do (
     if not "%%f"=="%JJ_FILE%" if not "%%~xf"==".jj" del "%%f"
 )
 
+rem Lösche alle .class Dateien im aktuellen Verzeichnis und allen Unterverzeichnissen
+del /s *.class
+
 rem Führe javacc mit der angegebenen Datei aus
 javacc %JJ_FILE%
 

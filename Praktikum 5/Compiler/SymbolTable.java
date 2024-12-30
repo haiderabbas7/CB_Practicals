@@ -5,7 +5,7 @@ import java.util.Hashtable;
 public class SymbolTable {
     private Hashtable<String, Symbol> symbolTabelle = new Hashtable<String, Symbol>();
     //globale Variable zum Ermitteln von Speicherindizes
-    private static int nextIndex = 0;
+    private static int nextIndex = 1;
 
     public void addConstant(String ident, String value) {
         try {
