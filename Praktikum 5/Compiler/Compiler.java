@@ -156,6 +156,11 @@ public class Compiler {
              * guck dir das einfach nochmal an
              * */
 
+
+            /*-FÜR DIE EINE FOR SCHLEIFE
+kann die logik umändern
+für Xy prüft er dann nicht nur X, sondern auch ob die zahl Xa mit a größer als y
+und for schleife kann bei y beginnen whatever*/
             System.out.println("label count: " + labelCount);
             for(int x = i + 1; x < labelCount; x++){
                 for(int y = 0; y < programList.size(); y++){
