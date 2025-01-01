@@ -129,7 +129,7 @@ public class Compiler {
     }
 
     public String resolveLabels(String program){
-        System.out.println("\nPROGRAM VOR AUFLÖSUNG:\n" + program + "\n\n");
+        System.out.println("\nPROGRAM VOR AUFLOESUNG:\n" + program + "\n\n");
         String programString = program;
         int labelCount = labelGenerator.getLabelCount();
 
@@ -146,7 +146,6 @@ public class Compiler {
 		    * also wir sind nun bei Label i, es werden also alle Labels Xi+1 bis Xn entfernt
 		    * die labels X0 bis Xi-1 wurden im vorherigen run ja aufgelöst
             * */
-            System.out.println("label count: " + labelCount);
             for(int x = i + 1; x < labelCount; x++){
                 for(int y = 0; y < programList.size(); y++){
                     if(programList.get(y).charAt(0) == 'X' && Integer.parseInt(programList.get(y).substring(1)) == y){
@@ -160,22 +159,39 @@ public class Compiler {
             int labelPos = programList.indexOf("L" + i);
             System.out.println(i + " labelPos: " + labelPos);
             int destinationPos = programList.indexOf("X" + i);
-            System.out.println(i + " destinationPos: " + destinationPos + "\n");
+            System.out.println(i + " destinationPos: " + destinationPos);
             int distance = destinationPos - labelPos;
             if(distance > 0){
+                //Addiert hier 2 stellen für die zwei Bytes vor dem L1
                 distance += 2;
                 String hexDistance = String.format("%02x", distance);
                 programString = programString.replace("L" + i + " ", hexDistance + " ");
-                System.out.println("Replaced " + i + " with " + hexDistance);
+                System.out.println("Replaced " + i + " with " + hexDistance + "\n");
             }
             else {
+                /*
                 distance += 20; //TODO: MAGIC NUMBER HIER AUSBESSERN
+
                 int positiveDistance = -distance;
                 int hexOffset = 0xFFFF - positiveDistance;
+
                 String hexDistance = String.format("%04x", hexOffset);
                 hexDistance = hexDistance.substring(0, 2) + " " + hexDistance.substring(2);
                 programString = programString.replace("00 L" + i + " ", hexDistance + " ");
-                System.out.println("Replaced " + i + " with " + hexDistance);
+                System.out.println("Replaced " + i + " with " + hexDistance + "\n");
+                */
+
+                int positiveDistance = -distance; //invertieren damit wir einfacher damit rechnen können
+                positiveDistance -= 1; //-1 weil das X0 als Byte mitgezählt wird weil negativer Sprung
+                positiveDistance -= 2; //-2 weil wir beim Sprung die zwei Bytes vor dem Ln beim call mitgezählt haben
+                System.out.println("positiveDistance: " + positiveDistance + "\n");
+
+                int hexOffset = 0xFFFF - positiveDistance;
+
+                String hexDistance = String.format("%04x", hexOffset);
+                hexDistance = hexDistance.substring(0, 2) + " " + hexDistance.substring(2);
+                programString = programString.replace("00 L" + i + " ", hexDistance + " ");
+                System.out.println("Replaced " + i + " with " + hexDistance + "\n");
             }
 
             //Und im programString dann noch "Xi " entfernen
