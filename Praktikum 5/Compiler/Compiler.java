@@ -26,8 +26,7 @@ public class Compiler {
     //gibt den Code zurück, um die Variable zu initialisieren
     public String initVariable(String varName, String varValue) {
         try {
-            //TODO: HIER MUSS ICH GLAUBE ICH STATTDESSEN %02x NUTZEN, PACKS REIN UND TEST AUS
-            String varIndex = String.format("%02d", Integer.parseInt(symbolTable.getSymbolObject(varName).getValue()));
+            String varIndex = String.format("%02x", Integer.parseInt(symbolTable.getSymbolObject(varName).getValue()));
             return "10 " + String.format("%02x", Integer.parseInt(varValue)) + " 36 " + varIndex + " ";
         } catch(Exception e){
             System.err.println(e.getMessage());
@@ -169,24 +168,12 @@ public class Compiler {
                 System.out.println("Replaced " + i + " with " + hexDistance + "\n");
             }
             else {
-                /*
-                distance += 20; //TODO: MAGIC NUMBER HIER AUSBESSERN
-
-                int positiveDistance = -distance;
-                int hexOffset = 0xFFFF - positiveDistance;
-
-                String hexDistance = String.format("%04x", hexOffset);
-                hexDistance = hexDistance.substring(0, 2) + " " + hexDistance.substring(2);
-                programString = programString.replace("00 L" + i + " ", hexDistance + " ");
-                System.out.println("Replaced " + i + " with " + hexDistance + "\n");
-                */
-
                 int positiveDistance = -distance; //invertieren damit wir einfacher damit rechnen können
                 positiveDistance -= 1; //-1 weil das X0 als Byte mitgezählt wird weil negativer Sprung
                 positiveDistance -= 2; //-2 weil wir beim Sprung die zwei Bytes vor dem Ln beim call mitgezählt haben
                 System.out.println("positiveDistance: " + positiveDistance + "\n");
 
-                int hexOffset = 0xFFFF - positiveDistance;
+                int hexOffset = 0xFFFF - positiveDistance + 1; //IDK OB DAS PLUS 1 IN JEDEM FALL RICHTIG IST
 
                 String hexDistance = String.format("%04x", hexOffset);
                 hexDistance = hexDistance.substring(0, 2) + " " + hexDistance.substring(2);
