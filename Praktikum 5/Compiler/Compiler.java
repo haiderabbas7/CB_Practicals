@@ -134,9 +134,9 @@ public class Compiler {
         int labelCount = labelGenerator.getLabelCount();
 
         for(int i = 0; i < labelCount; i++){
-            //WAS HIER GEMACHT WIRD: Bytecode anhand der Whitespaces in Array packen
-            //  aus diesem Array werden dann die Function calls in zwei Dummy-Bytes aufgelöst
-            //  schließlich noch Umwandlung in ArrayList
+            //Bytecode anhand der Whitespaces in Array packen
+            //aus diesem Array werden dann die Function calls in zwei Dummy-Bytes aufgelöst
+            //schließlich noch Umwandlung in ArrayList
             ArrayList<String> programList = new ArrayList<>(
                     Arrays.asList(
                             CompilerHelper.splitAllFunctionCalls(
@@ -146,30 +146,16 @@ public class Compiler {
 		    * also wir sind nun bei Label i, es werden also alle Labels Xi+1 bis Xn entfernt
 		    * die labels X0 bis Xi-1 wurden im vorherigen run ja aufgelöst
             * */
-
-            /** TODO:
-             * guck dir das hier nochmal genau an
-             * WICHTIG: die L dinger werden ja nicht entfernt weil das "richtige" Bytes sind
-             *      die stehen ja für den Jumpp index, also zb für das a0 00 L1
-             * und für das vorletzte label entferne ich ja das letzte nicht
-             * weil dann wird ja i + 1 gleich label count und er geht nie in die for schleife
-             * guck dir das einfach nochmal an
-             * */
-
-
-            /*-FÜR DIE EINE FOR SCHLEIFE
-kann die logik umändern
-für Xy prüft er dann nicht nur X, sondern auch ob die zahl Xa mit a größer als y
-und for schleife kann bei y beginnen whatever*/
             System.out.println("label count: " + labelCount);
             for(int x = i + 1; x < labelCount; x++){
                 for(int y = 0; y < programList.size(); y++){
-                    if(programList.get(y).charAt(0) == 'X'){
+                    if(programList.get(y).charAt(0) == 'X' && Integer.parseInt(programList.get(y).substring(1)) == y){
                         programList.remove(y);
-                        System.out.println("Temporarily removed " + i);
+                        System.out.println("Temporarily removed " + x);
                     }
                 }
             }
+
             //wir holen uns die position von Li und Xi
             int labelPos = programList.indexOf("L" + i);
             System.out.println(i + " labelPos: " + labelPos);
