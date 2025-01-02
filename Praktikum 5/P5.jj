@@ -20,20 +20,31 @@ PARSER_BEGIN(P5)
         //Erstellt die SymbolTabelle und übergibt sie dem CodeGenberator
         private static Compiler.SymbolTable symbolTable = new Compiler.SymbolTable();
         private static Compiler.Compiler compiler = new Compiler.Compiler(symbolTable);
+        //TODO: mach hier ein neues statisches Method ArrayList, wodrin die Method objekte gespeichert werden
 
 		public static void main (String args []) {
 			P5 parser = new P5(System.in);
-            String result = "";
+            String main = "";
 			try {
-                //Hier Parser starten und Ergebnis ausgeben
-				result = parser.start();
-                System.out.println(result);
+				main = parser.start();
 			} catch (ParseException e) {
 				System.err.println(e);
 			}
 
-            JavaClassFileGenerator.MethodObject mainMethod = new JavaClassFileGenerator.MethodObject("main", 1, result);
-            JavaClassFileGenerator.JavaClassFileGenerator classGenerator = new JavaClassFileGenerator.JavaClassFileGenerator("myClass", true, true, true);
+            /*
+            JAVA DOC FÜR METHODOBJECT, WEIL DAS HIER NICHT LÄDT:
+            Hat drei Variablen name, argsSize und byteCode
+            - name natürlich der Name der Methode, zb main unten
+            - argsSize eben die Anzahl der Parameter, zb main hat ja nur einen, das String[] args
+            - bytecode eben ein String welcher den Bytecode enthält, zb unten für die main packe ich das in den String main
+            => METHODOBJECT KLASSE HAT AUCH GETTER UND SETTER FÜR DIESE VARIABLEN
+             */
+             //TODO: hier muss für jedes Method objekt aus der ArrayList oben ein MethodObject erstellt werden du weißt
+
+            JavaClassFileGenerator.MethodObject mainMethod = new JavaClassFileGenerator.MethodObject("main", 1, main);
+
+            //Stell hier die false auf true wenn ich eine lesbare Klasse haben will, zum Debuggen oder so
+            JavaClassFileGenerator.JavaClassFileGenerator classGenerator = new JavaClassFileGenerator.JavaClassFileGenerator("myClass", true, false, false);
             classGenerator.generateClassFile(mainMethod);
 		}
 	}
@@ -52,6 +63,8 @@ TOKEN :
 | <IF : "if">
 | <WHILE : "while">
 | <ELSE : "else">
+| <VOID : "void">
+| <RETURN : "return">
 | <COMPOP : "!=" | "==" | "<=" | ">=" | ">" | "<">
 | <NUMBER : ("0" | ["1"-"9"] (["0"-"9"])*)>
 | <IDENT : (["a"-"z"] (["a"-"z"] | ["A"-"Z"] | ["0"-"9"])*)>
@@ -62,6 +75,9 @@ String PROGRAM():
 {
     CONSTDECL()
     varDecl = VARDECL()
+    //TODO: HIER WEITERMACHEN
+    (PROCEDURE())*
+    (FUNCTION())*
     statement = STATEMENT()
     { return varDecl + statement; }
 }
@@ -131,6 +147,70 @@ String VARLIST():
     { return varDecl; }
 }
 
+//TODO: HIER AUF STRING UMSTELLEN UND RETURN WENN ICH UMGESETZT HABE
+void PROCEDURE():
+{}
+{
+    <VOID>
+    <IDENT>
+    "("
+    //TODO: HIER WEITERMACHEN
+    (ROUTINENPARAMETER())?
+    ")"
+    "{"
+    //TODO: HIER WEITERMACHEN
+    (ROUTINENBLOCK())?
+    "}"
+}
+
+//TODO: HIER AUF STRING UMSTELLEN UND RETURN WENN ICH UMGESETZT HABE
+void FUNCTION():
+{}
+{
+    <VOID>
+    <IDENT>
+    "("
+    //TODO: HIER WEITERMACHEN
+    (ROUTINENPARAMETER())?
+    ")"
+    "{"
+    //TODO: HIER WEITERMACHEN
+    (ROUTINENBLOCK())?
+    <RETURN>
+    EXPRESSION()
+    ";"
+    "}"
+}
+
+//TODO: HIER AUF STRING UMSTELLEN UND RETURN WENN ICH UMGESETZT HABE
+void ROUTINENPARAMETER():
+{}
+{
+    //TODO: HIER WEITERMACHEN
+    <INT> <IDENT> ROUTINENPARAMETER_LIST()
+}
+
+//TODO: HIER AUF STRING UMSTELLEN UND RETURN WENN ICH UMGESETZT HABE
+void ROUTINENPARAMETER_LIST():
+{}
+{
+    //TODO: HIER WEITERMACHEN
+    (
+        "," <INT> <IDENT> ROUTINENPARAMETER_LIST()
+    )?
+}
+
+//TODO: HIER AUF STRING UMSTELLEN UND RETURN WENN ICH UMGESETZT HABE
+void ROUTINENBLOCK():
+{}
+{
+    //TODO: HIER WEITERMACHEN
+    //Das wird hier nicht mit ? gemacht weil CONSTDECL selber schon optional ist, wurde für LLk verbessert du weißt
+    CONSTDECL()
+    VARDECL()
+    STATEMENT()
+}
+
 String EXPRESSION():
 { String term, summe; }
 {
@@ -198,7 +278,8 @@ String FAKTOR():
         return "10 " + String.format("%02x", Integer.parseInt(number)) + " ";
     }
     |
-    <IDENT>
+    //TODO: HIER WEITERMACHEN
+    <IDENT> (FUNCTIONCALL())?
     {
         return compiler.generateIdentCode(token.image);
     }
@@ -215,14 +296,62 @@ String CONDITION():
     { return compiler.generateConditionCode(left, right, compOP);}
 }
 
+
+
+/*TODO: WENN ES HIER FAXEN GIBT DANN ÄNDER UM IN LLk, ALSO
+   FUNCTIONCALL = "(" (EXPRESSION FUNCTIONCALL_LIST)? ")"
+   FUNCTIONCALL_LIST = , EXPRESSION FUNCTIONCALL_LIST | eps
+   * */
+//TODO: HIER AUF STRING UMSTELLEN UND RETURN WENN ICH UMGESETZT HABE
+void FUNCTIONCALL():
+{}
+{
+    //TODO: HIER WEITERMACHEN
+    "("
+        (
+            EXPRESSION()
+            (
+                "," EXPRESSION()
+            )*
+        )?
+    ")"
+}
+
+/*TODO: WENN ES HIER FAXEN GIBT DANN ÄNDER UM IN LLk, ALSO
+   FUNCTIONCALL = "(" (EXPRESSION FUNCTIONCALL_LIST)? ")"
+   FUNCTIONCALL_LIST = , EXPRESSION FUNCTIONCALL_LIST | eps
+   * */
+//TODO: HIER AUF STRING UMSTELLEN UND RETURN WENN ICH UMGESETZT HABE
+void PROCCALL():
+{}
+{
+    //TODO: HIER WEITERMACHEN
+    "("
+        (
+            EXPRESSION()
+            (
+                "," EXPRESSION()
+            )*
+        )?
+    ")"
+}
+
 String STATEMENT():
 {String expression = "", ident = "", statement = "", condition = "", optElse = "";}
 {
     <IDENT>
     { ident = token.image;}
-    "="
-    expression = EXPRESSION() ";"
-    { return expression + "36 " + symbolTable.getVariable(ident) + " "; }
+    (
+        "="
+        expression = EXPRESSION()
+        { return expression + "36 " + symbolTable.getVariable(ident) + " "; }
+
+        |
+
+        //TODO: HIER WEITERMACHEN
+        PROCCALL()
+    )
+    ";"
 
     |
 

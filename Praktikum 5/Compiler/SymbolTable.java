@@ -6,6 +6,7 @@ import Compiler.Exceptions.*;
 public class SymbolTable {
     private Hashtable<String, Symbol> symbolTabelle = new Hashtable<String, Symbol>();
     //globale Variable zum Ermitteln von Speicherindizes
+    //TODO: HIER UMÄNDERN DASS NICHT STATISCH IST, JEDE METHODE SOLL IHRE EIGENE SYMBOLTABELLE HABEN
     private static int nextIndex = 1;
 
     public void addConstant(String ident, String value) {
