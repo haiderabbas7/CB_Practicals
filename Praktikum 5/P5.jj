@@ -16,20 +16,23 @@ Code mit Zuweisungen, Statementblöcke, if else und while
 
 //PARSER FÜR MINIJAVA
 PARSER_BEGIN(P5)
-	public class P5 {
-        //Erstellt die SymbolTabelle und übergibt sie dem CodeGenberator
-        private static Compiler.SymbolTable symbolTable = new Compiler.SymbolTable();
-        private static Compiler.Compiler compiler = new Compiler.Compiler(symbolTable);
-        //TODO: mach hier ein neues statisches Method ArrayList, wodrin die Method objekte gespeichert werden
+    import java.util.ArrayList;
+    import Compiler.*;
 
-		public static void main (String args []) {
-			P5 parser = new P5(System.in);
-            String main = "";
-			try {
-				main = parser.start();
-			} catch (ParseException e) {
-				System.err.println(e);
-			}
+    public class P5 {
+        //Erstellt die SymbolTabelle und übergibt sie dem CodeGenberator
+        private static Compiler compiler = new Compiler();
+        //TODO: DAS MACHT FAXEN WENN ICH NUR <> SCHREIBE AM ENDE. KANN VLLT NOCH MEHR FAXEN MACHEN, PACK SONST DIE GANZE METHOD KACKE IN COMPILER KLASSE
+        private static ArrayList<Method> methods = new ArrayList<Method>();
+
+	    public static void main (String args []) {
+		    P5 parser = new P5(System.in);
+               String main = "";
+		    try {
+		    	main = parser.start();
+		    } catch (ParseException e) {
+		    	System.err.println(e);
+		    }
 
             /*
             JAVA DOC FÜR METHODOBJECT, WEIL DAS HIER NICHT LÄDT:
@@ -46,8 +49,8 @@ PARSER_BEGIN(P5)
             //Stell hier die false auf true wenn ich eine lesbare Klasse haben will, zum Debuggen oder so
             JavaClassFileGenerator.JavaClassFileGenerator classGenerator = new JavaClassFileGenerator.JavaClassFileGenerator("myClass", true, false, false);
             classGenerator.generateClassFile(mainMethod);
-		}
-	}
+	    }
+    }
 PARSER_END(P5)
 
 SKIP:
@@ -71,25 +74,24 @@ TOKEN :
 }
 
 String PROGRAM():
-{String varDecl, statement;}
+{ String varDecl, statement; }
 {
-    CONSTDECL()
-    varDecl = VARDECL()
-    //TODO: HIER WEITERMACHEN
+    CONSTDECL("main")
+    varDecl = VARDECL("main")
+    //TODO: EVTL HIER UMÄNDERN, WENN ICH PROCEDURE/FUNCTION UNTEN NACH LLK GEMACHT HAB
     (PROCEDURE())*
     (FUNCTION())*
-    statement = STATEMENT()
+    statement = STATEMENT("main")
     { return varDecl + statement; }
 }
 
-//Code zu Konstanten ist der gleiche wie in P3
-void CONSTDECL() :
+void CONSTDECL(String scope) :
 {}
 {
-    (<FINAL> <INT> CONSTZUW() CONSTLIST() ";")?
+    (<FINAL> <INT> CONSTZUW(scope) CONSTLIST(scope) ";")?
 }
 
-void CONSTZUW():
+void CONSTZUW(String scope):
 { String constName; }
 {
     <IDENT>
@@ -97,118 +99,118 @@ void CONSTZUW():
     "="
     <NUMBER>
     {
-        symbolTable.addConstant(constName, token.image);
+        compiler.addConstant(scope, constName, token.image);
     }
 }
 
-void CONSTLIST():
+void CONSTLIST(String scope):
 {}
 {
-    ("," CONSTZUW())*
+    ("," CONSTZUW(scope))*
 }
 
-String VARDECL():
+String VARDECL(String scope):
 {String varDecl = "";}
 {
     (
         <INT>
-        { varDecl = VARZUW() + VARLIST(); }
+        { varDecl = VARZUW(scope) + VARLIST(scope); }
         ";"
     )?
    { return varDecl; }
 }
 
-String VARZUW():
+String VARZUW(String scope):
 { String varName, result = ""; }
 {
     <IDENT>
     {
         //fügt die Variable in die Hashtable ein und speichert sich den Index
         varName = token.image;
-        result = compiler.declareVariable(varName);
+        result = compiler.declareVariable(scope, varName);
     }
     (
         "=" <NUMBER>
         {
             //Falls variable doch initialisiert wird, dann erstelle hier den passenden code
-            result = compiler.initVariable(varName, token.image);
+            result = compiler.initVariable(scope, varName, token.image);
         }
     )?
     { return result; }
 }
 
-String VARLIST():
+String VARLIST(String scope):
 {String varDecl = "";}
 {
     (
         ","
-        { varDecl = varDecl + VARZUW(); }
+        { varDecl = varDecl + VARZUW(scope); }
     )*
     { return varDecl; }
 }
 
+/*TODO: WENN ES HIER FAXEN GIBT DANN ÄNDER UM IN LLk
+   HALT PROCEDURE_LIST UND SO KACKE
+   * */
 //TODO: HIER AUF STRING UMSTELLEN UND RETURN WENN ICH UMGESETZT HABE
 void PROCEDURE():
-{}
+{String scope, routinenparameter = "", routinenblock = "";}
 {
     <VOID>
     <IDENT>
-    "("
-    //TODO: HIER WEITERMACHEN
-    (ROUTINENPARAMETER())?
-    ")"
+    {scope = token.image;}
+    "(" (routinenparameter = ROUTINENPARAMETER(scope))? ")"
     "{"
-    //TODO: HIER WEITERMACHEN
-    (ROUTINENBLOCK())?
+        (routinenblock = ROUTINENBLOCK(scope))?
     "}"
+    //Er erstellt über den Compiler ein neues Method Objekt der Prozedur und fügt es der ArrayList hinzu
+    { methods.add(compiler.createProcedure(routinenparameter, routinenblock));}
 }
 
+/*TODO: WENN ES HIER FAXEN GIBT DANN ÄNDER UM IN LLk
+   HALT FUNCTION_LIST UND SO KACKE
+   * */
 //TODO: HIER AUF STRING UMSTELLEN UND RETURN WENN ICH UMGESETZT HABE
 void FUNCTION():
-{}
+{String scope, routinenparameter = "", routinenblock = "";}
 {
     <VOID>
     <IDENT>
-    "("
-    //TODO: HIER WEITERMACHEN
-    (ROUTINENPARAMETER())?
-    ")"
+    {scope = token.image;}
+    "(" (routinenparameter = ROUTINENPARAMETER(scope))? ")"
     "{"
     //TODO: HIER WEITERMACHEN
-    (ROUTINENBLOCK())?
-    <RETURN>
-    EXPRESSION()
-    ";"
+        (routinenblock = ROUTINENBLOCK(scope))?
+        <RETURN> EXPRESSION() ";"
     "}"
 }
 
-//TODO: HIER AUF STRING UMSTELLEN UND RETURN WENN ICH UMGESETZT HABE
-void ROUTINENPARAMETER():
-{}
+String ROUTINENPARAMETER(String scope):
+{String routinenparameter = "";}
 {
     //TODO: HIER WEITERMACHEN
-    <INT> <IDENT> ROUTINENPARAMETER_LIST()
+    <INT> <IDENT> ROUTINENPARAMETER_LIST(scope)
+    {return "";}
 }
 
-//TODO: HIER AUF STRING UMSTELLEN UND RETURN WENN ICH UMGESETZT HABE
-void ROUTINENPARAMETER_LIST():
+String ROUTINENPARAMETER_LIST(String scope):
 {}
 {
     //TODO: HIER WEITERMACHEN
     (
-        "," <INT> <IDENT> ROUTINENPARAMETER_LIST()
+        "," <INT> <IDENT> ROUTINENPARAMETER_LIST(scope)
     )?
+    {return "";}
 }
 
-//TODO: HIER AUF STRING UMSTELLEN UND RETURN WENN ICH UMGESETZT HABE
-void ROUTINENBLOCK():
-{}
+String ROUTINENBLOCK(String scope):
+{String varDecl, statement;}
 {
-    //TODO: HIER WEITERMACHEN
     //Das wird hier nicht mit ? gemacht weil CONSTDECL selber schon optional ist, wurde für LLk verbessert du weißt
-    CONSTDECL()
-    VARDECL()
-    STATEMENT()
+    CONSTDECL(scope)
+    varDecl = VARDECL(scope)
+    statement = STATEMENT(scope)
+    {return varDecl + statement;}
 }
 
 String EXPRESSION():
@@ -336,7 +338,7 @@ void PROCCALL():
     ")"
 }
 
-String STATEMENT():
+String STATEMENT(String scope):
 {String expression = "", ident = "", statement = "", condition = "", optElse = "";}
 {
     <IDENT>
@@ -344,7 +346,7 @@ String STATEMENT():
     (
         "="
         expression = EXPRESSION()
-        { return expression + "36 " + symbolTable.getVariable(ident) + " "; }
+        { return expression + "36 " +  compiler.getVariable(scope, ident) + " "; }
 
         |
 
@@ -360,41 +362,41 @@ String STATEMENT():
 
     |
 
-    "{" statement = STMTLIST() "}"
+    "{" statement = STMTLIST(scope) "}"
     { return statement; }
 
     |
 
     <IF>
     condition = CONDITION()
-    statement = STATEMENT()
-    optElse = OPTELSE()
+    statement = STATEMENT(scope)
+    optElse = OPTELSE(scope)
     { return compiler.generateIfCode(condition, statement, optElse); }
 
     |
 
     <WHILE>
     condition = CONDITION()
-    statement = STATEMENT()
+    statement = STATEMENT(scope)
     { return compiler.generateWhileCode(condition, statement); }
 }
 
-String OPTELSE():
+String OPTELSE(String scope):
 {String statement = "";}
 {
     (
     <ELSE>
-    statement = STATEMENT()
+    statement = STATEMENT(scope)
     {return statement;}
     )?
     {return "";}
 }
 
-String STMTLIST():
+String STMTLIST(String scope):
 {String statement = "", singleStatement = "";}
 {
     (
-     singleStatement = STATEMENT()
+     singleStatement = STATEMENT(scope)
      {statement = statement + singleStatement;}
     )*
     {return statement;}

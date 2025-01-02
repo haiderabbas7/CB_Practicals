@@ -6,8 +6,11 @@ import Compiler.Exceptions.*;
 public class SymbolTable {
     private Hashtable<String, Symbol> symbolTabelle = new Hashtable<String, Symbol>();
     //globale Variable zum Ermitteln von Speicherindizes
-    //TODO: HIER UMÄNDERN DASS NICHT STATISCH IST, JEDE METHODE SOLL IHRE EIGENE SYMBOLTABELLE HABEN
-    private static int nextIndex = 1;
+    private int nextIndex = 1;
+
+    public SymbolTable(){
+        this.nextIndex = 1;
+    }
 
     public void addConstant(String ident, String value) {
         try {
@@ -29,9 +32,9 @@ public class SymbolTable {
             Symbol symbol = new Symbol(ident, Integer.toString(nextIndex), true);
             symbolTabelle.put(ident, symbol);
             //nächste Variable hat den nächsten Index
-            nextIndex++;
+            this.nextIndex = this.nextIndex + 1;
             //stellt sicher dass immer zweistellig zurückgegeben wird
-            return String.format("%02d", nextIndex - 1);
+            return String.format("%02d", this.nextIndex - 1);
         }
     }
 
@@ -47,8 +50,7 @@ public class SymbolTable {
         if (!symbolTabelle.containsKey(ident)) {
             throw new UnknownSymbolException("Symbol " + ident + " wurde nicht definiert.");
         } else {
-            Symbol symbol = symbolTabelle.get(ident);
-            return symbol;
+            return symbolTabelle.get(ident);
         }
     }
 

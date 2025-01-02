@@ -1,21 +1,38 @@
 package Compiler;
 
 import Compiler.SymbolTable;
+import Compiler.Method;
 import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Hashtable;
 
 public class Compiler {
-    private static SymbolTable symbolTable;
+    private static SymbolTable mainSymbolTable;
     private static LabelGenerator labelGenerator = new LabelGenerator();
+    private Hashtable<String, SymbolTable> symbolTables =
+            new Hashtable<String, SymbolTable>();
 
-    public Compiler(SymbolTable symbolTable) {
-        this.symbolTable = symbolTable;
+    public Compiler() {
+        //Erstelle eine neue SymbolTabelle für die Funktion main
+        this.symbolTables.put("main", new SymbolTable());
+    }
+
+    public SymbolTable getSymbolTable(String scope){
+        return symbolTables.get(scope);
+    }
+
+    public void addConstant(String scope, String constname, String number){
+        this.getSymbolTable(scope).addConstant(constname, number);
+    }
+
+    public String getVariable(String scope, String ident){
+        return this.getSymbolTable(scope).getVariable(ident);
     }
 
     //deklariert die Variable in der symboltabelle und gibt den bytecode dafür zurück
-    public String declareVariable(String varName) {
+    public String declareVariable(String scope, String varName) {
         try{
-            String varIndex = symbolTable.addVariable(varName);
+            String varIndex = this.getSymbolTable(scope).addVariable(varName);
             return "10 00 36 " + varIndex + " ";
         } catch(Exception e){
             System.err.println(e.getMessage());
@@ -24,9 +41,9 @@ public class Compiler {
     }
 
     //gibt den Code zurück, um die Variable zu initialisieren
-    public String initVariable(String varName, String varValue) {
+    public String initVariable(String scope, String varName, String varValue) {
         try {
-            String varIndex = String.format("%02x", Integer.parseInt(symbolTable.getSymbolObject(varName).getValue()));
+            String varIndex = String.format("%02x", Integer.parseInt(this.getSymbolTable(scope).getSymbolObject(varName).getValue()));
             return "10 " + String.format("%02x", Integer.parseInt(varValue)) + " 36 " + varIndex + " ";
         } catch(Exception e){
             System.err.println(e.getMessage());
@@ -38,8 +55,8 @@ public class Compiler {
     public String generateIdentCode(String ident){
         try{
             //prüft ob der Identifier eine Variable ist
-            boolean isVariable = symbolTable.isVariable(ident);
-            String hashMapValue = symbolTable.getSymbol(ident);
+            boolean isVariable = mainSymbolTable.isVariable(ident);
+            String hashMapValue = mainSymbolTable.getSymbol(ident);
             //Variable = erzeug 15 für LOAD, Konstante = 10 für Laden der Konstante
             return (isVariable ? "15 " : "10 ") + hashMapValue + " ";
         } catch(Exception e){
@@ -185,5 +202,9 @@ public class Compiler {
             programString = programString.replace("X" + i + " ", "");
         }
         return programString;
+    }
+
+    public Method createProcedure(String routinenparameter, String routinenblock){
+        //routinenBlock
     }
 }
