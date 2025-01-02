@@ -1,4 +1,4 @@
-package Compiler;
+package Compiler.Exceptions;
 
 public class SymbolAlreadyDefinedException extends Exception {
 

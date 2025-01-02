@@ -1,6 +1,7 @@
 package Compiler;
 
 import java.util.Hashtable;
+import Compiler.Exceptions.*;
 
 public class SymbolTable {
     private Hashtable<String, Symbol> symbolTabelle = new Hashtable<String, Symbol>();
