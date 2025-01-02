@@ -4,21 +4,18 @@ import Compiler.SymbolTable;
 import Compiler.Method;
 import java.util.Arrays;
 import java.util.ArrayList;
-import java.util.Hashtable;
 
 public class Compiler {
     private static SymbolTable mainSymbolTable;
     private static LabelGenerator labelGenerator = new LabelGenerator();
-    private Hashtable<String, SymbolTable> symbolTables =
-            new Hashtable<String, SymbolTable>();
+    private Hashtable<String, Method> methods = new Hashtable<String, Method>();
 
     public Compiler() {
-        //Erstelle eine neue SymbolTabelle für die Funktion main
-        this.symbolTables.put("main", new SymbolTable());
+        this.methods.put("main", new Method("main", false, 1));
     }
 
     public SymbolTable getSymbolTable(String scope){
-        return symbolTables.get(scope);
+        return this.methods.get(scope).getSymbolTable();
     }
 
     public void addConstant(String scope, String constname, String number){
@@ -204,7 +201,24 @@ public class Compiler {
         return programString;
     }
 
-    public Method createProcedure(String routinenparameter, String routinenblock){
-        //routinenBlock
+
+    //sobald der Scope bekannt ist wird hier das Method objekt mit der dazugehörigen SymbolTabelle erstellt
+    public Method createMethod(String scope, boolean isFunction){
+        this.methods.put(scope, new Method(), isFunction);
+    }
+
+    //Hier werden nur die Parameter in der SymbolTabelle verankert
+    public void defineParameters(String scope, String routinenparameter){
+        //TODO: HIER WEITER
+    }
+
+    //Hier wird der Code der Prozedur erstellt und dem entsprechenden Method object zurückgegeben
+    public void generateProcedureCode(String scope, String routinenblock){
+        //TODO: HIER WEITER
+    }
+
+    //Hier wird der Code der Funktion erstellt und dem entsprechenden Method object zurückgegeben
+    public void generateFunctionCode(String scope, String routinenblock){
+        //TODO: HIER WEITER
     }
 }

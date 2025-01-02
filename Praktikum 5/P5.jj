@@ -20,12 +20,9 @@ PARSER_BEGIN(P5)
     import Compiler.*;
 
     public class P5 {
-        //Erstellt die SymbolTabelle und übergibt sie dem CodeGenberator
         private static Compiler compiler = new Compiler();
-        //TODO: DAS MACHT FAXEN WENN ICH NUR <> SCHREIBE AM ENDE. KANN VLLT NOCH MEHR FAXEN MACHEN, PACK SONST DIE GANZE METHOD KACKE IN COMPILER KLASSE
-        private static ArrayList<Method> methods = new ArrayList<Method>();
 
-	    public static void main (String args []) {
+	    public static void main (String[] args ) {
 		    P5 parser = new P5(System.in);
                String main = "";
 		    try {
@@ -42,7 +39,7 @@ PARSER_BEGIN(P5)
             - bytecode eben ein String welcher den Bytecode enthält, zb unten für die main packe ich das in den String main
             => METHODOBJECT KLASSE HAT AUCH GETTER UND SETTER FÜR DIESE VARIABLEN
              */
-             //TODO: hier muss für jedes Method objekt aus der ArrayList oben ein MethodObject erstellt werden du weißt
+             //TODO: hier muss für jedes Method objekt aus der ArrayList  ein MethodObject erstellt werden du weißt
 
             JavaClassFileGenerator.MethodObject mainMethod = new JavaClassFileGenerator.MethodObject("main", 1, main);
 
@@ -152,25 +149,34 @@ String VARLIST(String scope):
 /*TODO: WENN ES HIER FAXEN GIBT DANN ÄNDER UM IN LLk
    HALT PROCEDURE_LIST UND SO KACKE
    * */
-//TODO: HIER AUF STRING UMSTELLEN UND RETURN WENN ICH UMGESETZT HABE
 void PROCEDURE():
 {String scope, routinenparameter = "", routinenblock = "";}
 {
     <VOID>
     <IDENT>
-    {scope = token.image;}
-    "(" (routinenparameter = ROUTINENPARAMETER(scope))? ")"
-    "{"
-        (routinenblock = ROUTINENBLOCK(scope))?
-    "}"
     //Er erstellt über den Compiler ein neues Method Objekt der Prozedur und fügt es der ArrayList hinzu
-    { methods.add(compiler.createProcedure(routinenparameter, routinenblock));}
+    {scope = token.image;
+    methods.add(compiler.createProcedure(routinenparameter, false));}
+
+    "("
+        (
+            routinenparameter = ROUTINENPARAMETER(scope)
+            {compiler.defineParameters(scope, routinenparameter);}
+        )?
+    ")"
+
+    "{"
+        (
+            routinenblock = ROUTINENBLOCK(scope)
+            {compiler.generateProcedureCode(scope, routinenblock);}
+        )?
+    "}"
+
 }
 
 /*TODO: WENN ES HIER FAXEN GIBT DANN ÄNDER UM IN LLk
    HALT FUNCTION_LIST UND SO KACKE
    * */
-//TODO: HIER AUF STRING UMSTELLEN UND RETURN WENN ICH UMGESETZT HABE
 void FUNCTION():
 {String scope, routinenparameter = "", routinenblock = "";}
 {
