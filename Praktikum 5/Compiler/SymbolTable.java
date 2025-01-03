@@ -5,7 +5,6 @@ import Compiler.Exceptions.*;
 
 public class SymbolTable {
     private Hashtable<String, Symbol> symbolTabelle = new Hashtable<String, Symbol>();
-    //globale Variable zum Ermitteln von Speicherindizes
     private int nextIndex = 1;
 
     public SymbolTable(){
@@ -86,5 +85,19 @@ public class SymbolTable {
             Symbol symbol = symbolTabelle.get(ident);
             return symbol.isVariable();
         }
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("SymbolTable:\n");
+        for (String key : symbolTabelle.keySet()) {
+            Symbol symbol = symbolTabelle.get(key);
+            sb.append("Identifier: ").append(key)
+                    .append(", Value: ").append(symbol.getValue())
+                    .append(", IsVariable: ").append(symbol.isVariable())
+                    .append("\n");
+        }
+        return sb.toString();
     }
 }

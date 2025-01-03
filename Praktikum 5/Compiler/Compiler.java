@@ -270,4 +270,14 @@ public class Compiler {
         //TODO: MACH HIER NACH DEN PROCEDURES WEITER, MUSST DAS RETURN KORREKT USMETZEN DU WEIßT
         resetScope();
     }
+
+    public void printAllSymbolTables() {
+        System.out.println("Symbol Tables:");
+        for (String methodName : methods.keySet()) {
+            Method method = methods.get(methodName);
+            SymbolTable symbolTable = method.getSymbolTable();
+            System.out.println("Method: " + methodName);
+            System.out.println(symbolTable);
+        }
+    }
 }

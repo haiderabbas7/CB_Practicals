@@ -55,7 +55,8 @@ PARSER_BEGIN(P5)
                 );
                 methodObjects.add(anotherMethod);
             }
-            JavaClassFileGenerator.JavaClassFileGenerator classGenerator = new JavaClassFileGenerator.JavaClassFileGenerator("myClass", true, true, true);
+            JavaClassFileGenerator.JavaClassFileGenerator classGenerator = new JavaClassFileGenerator.JavaClassFileGenerator("myClass", true, false, true);
+            compiler.printAllSymbolTables();
             classGenerator.generateClassFile(methodObjects.toArray(new JavaClassFileGenerator.MethodObject[0]));
 	    }
     }
