@@ -167,6 +167,15 @@ public class Compiler {
         }
     }
 
+    public String generateProcCallCode(String procName, String parameters){
+        //procName kommt als String der Procedure an, parameters als fertiger Bytecode
+        //TODO: HIER MUSS GLAUEB ICH DIESE EINE WRONGPARAMETERS EXCEPTION GEWORFEN WERDEN
+        //MACH DAZU VLLT EINE METHODE, WELCHE DIE ANZAHL AN PARAMETERN ÜBERPRÜFT
+        //BZW HOL DIR VOM PARSER DIE ANZAHL AN PARAMETERN NOCH NCIHT ALS CODE IDFK
+        //DIESE GLEICHE METHODE KANNST DU DANN AUCH BEI DEN FUNCTION CALLS NUTZEN
+        return parameters + "b8 (" + procName + ") ";
+    }
+
     public String resolveLabels(String program){
         System.out.println("\nPROGRAM VOR AUFLOESUNG:\n" + program + "\n\n");
         String programString = program;
@@ -189,7 +198,7 @@ public class Compiler {
                 for(int y = 0; y < programList.size(); y++){
                     if(programList.get(y).charAt(0) == 'X' && Integer.parseInt(programList.get(y).substring(1)) == y){
                         programList.remove(y);
-                        //System.out.println("Temporarily removed " + x);
+                        System.out.println("Temporarily removed " + x);
                     }
                 }
             }
@@ -231,6 +240,7 @@ public class Compiler {
     //sobald der Scope bekannt ist wird hier das Method objekt mit der dazugehörigen SymbolTabelle erstellt
     public void createMethod(String name, boolean isFunction){
         this.methods.put(name, new Method(name, isFunction));
+        this.labelgenerators.put(name, new LabelGenerator());
         currentScope = name;
     }
 
@@ -250,14 +260,14 @@ public class Compiler {
     public void generateProcedureCode(String routinenblock){
         String procCode = routinenblock + "b1 ";
         System.out.println("Proccode: " + procCode);
-        //TODO: HIER MÜSSEN NOCH LABELS AUFGELÖST WERDEN
-        this.getMethod().setBytecode(procCode);
+        String resolvedCode = this.resolveLabels(procCode);
+        this.getMethod().setBytecode(resolvedCode);
         resetScope();
     }
 
     //Hier wird der Code der Funktion erstellt und dem entsprechenden Method object zurückgegeben
     public void generateFunctionCode(String routinenblock){
-        //TODO: HIER WEITER, MUSST DAS RETURN KORREKT USMETZEN DU WEIßT
+        //TODO: MACH HIER NACH DEN PROCEDURES WEITER, MUSST DAS RETURN KORREKT USMETZEN DU WEIßT
         resetScope();
     }
 }

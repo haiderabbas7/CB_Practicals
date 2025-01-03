@@ -355,37 +355,39 @@ void FUNCTIONCALL():
    FUNCTIONCALL = "(" (EXPRESSION FUNCTIONCALL_LIST)? ")"
    FUNCTIONCALL_LIST = , EXPRESSION FUNCTIONCALL_LIST | eps
    * */
-String PROCCALL():
-{}
+String PROCCALL(String procName):
+{String parameters = "", singleParameter = "";}
 {
-    //TODO: HIER WEITERMACHEN
     "("
         (
-            EXPRESSION()
+            parameters = EXPRESSION()
             (
-                "," EXPRESSION()
+                ","
+                singleParameter = EXPRESSION()
+                {parameters = parameters + singleParameter;}
             )*
         )?
     ")"
-    {return "";}
+    {return compiler.generateProcCallCode(procName, parameters);}
 }
 
 String STATEMENT():
-{String expression = "", ident = "", statement = "", condition = "", optElse = "";}
+{String expression = "", ident = "", statement = "", condition = "", optElse = "", procCall = "";}
 {
     <IDENT>
     { ident = token.image;}
     (
         "="
-        expression = EXPRESSION()
+        expression = EXPRESSION() ";"
+
         { return expression + "36 " +  compiler.getVariable(ident) + " "; }
 
         |
 
-        //TODO: HIER WEITERMACHEN
-        PROCCALL()
+        procCall = PROCCALL(ident) ";"
+        { return procCall; }
     )
-    ";"
+
 
     |
 

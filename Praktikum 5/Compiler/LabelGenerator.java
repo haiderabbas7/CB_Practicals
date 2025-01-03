@@ -1,15 +1,12 @@
 package Compiler;
 
-import java.util.Hashtable;
-
 public class LabelGenerator {
-    private int nextLabel = 1;
+    private int nextLabel = 0;
 
     public int getLabel(){
-        /*int label = nextLabel;
-        nextLabel++;*/
+        int label = nextLabel;
         this.nextLabel++;
-        return nextLabel;
+        return label;
     }
 
     public int getLabelCount(){
