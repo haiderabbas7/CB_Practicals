@@ -1,6 +1,6 @@
 /*
 Mein fibonacci Code aus P2 A1 zum testen:
-    final int n = 5; int a = 0, b = 1, c = 0, index = 1; { while index < n{ c = b + a; a = b; b = c; index = index + 1; } print(b); }
+    final int n = 5; int a = 0, b = 1, c = 0, index = 1; { while index < n { c = b + a; a = b; b = c; index = index + 1; } print(b); }
 Code mit Zuweisungen drin:
     final int c = 1; int v = 2; v = 3;
 Code mit Zuweisungen und Statementblöcke drin:
@@ -39,13 +39,24 @@ PARSER_BEGIN(P5)
             - bytecode eben ein String welcher den Bytecode enthält, zb unten für die main packe ich das in den String main
             => METHODOBJECT KLASSE HAT AUCH GETTER UND SETTER FÜR DIESE VARIABLEN
              */
-             //TODO: hier muss für jedes Method objekt aus der ArrayList  ein MethodObject erstellt werden du weißt
-
+            //TODO: hier muss für jedes Method objekt aus der ArrayList  ein MethodObject erstellt werden du weißt
+            //Erstellt eine ArrayListe für die MethodObjects, erstellt die Main und fügt diese der Liste hinzu
+            ArrayList<JavaClassFileGenerator.MethodObject> methodObjects = new ArrayList<JavaClassFileGenerator.MethodObject>();
             JavaClassFileGenerator.MethodObject mainMethod = new JavaClassFileGenerator.MethodObject("main", 1, main);
+            methodObjects.add(mainMethod);
 
-            //Stell hier die false auf true wenn ich eine lesbare Klasse haben will, zum Debuggen oder so
-            JavaClassFileGenerator.JavaClassFileGenerator classGenerator = new JavaClassFileGenerator.JavaClassFileGenerator("myClass", true, false, false);
-            classGenerator.generateClassFile(mainMethod);
+            //Holt sich alle Methoden vom Compiler ohne die Main methode, erstellt MethodObjects und fügt diese der Liste hinzu
+            ArrayList<Method> methods = compiler.getMethodsListWithoutMain();
+            for(Method method : methods){
+                JavaClassFileGenerator.MethodObject anotherMethod = new JavaClassFileGenerator.MethodObject(
+                        method.getName(),
+                        method.getParameterAmount(),
+                        method.getBytecode()
+                );
+                methodObjects.add(anotherMethod);
+            }
+            JavaClassFileGenerator.JavaClassFileGenerator classGenerator = new JavaClassFileGenerator.JavaClassFileGenerator("myClass", true, true, true);
+            classGenerator.generateClassFile(methodObjects.toArray(new JavaClassFileGenerator.MethodObject[0]));
 	    }
     }
 PARSER_END(P5)
@@ -73,22 +84,22 @@ TOKEN :
 String PROGRAM():
 { String varDecl, statement; }
 {
-    CONSTDECL("main")
-    varDecl = VARDECL("main")
+    CONSTDECL()
+    varDecl = VARDECL()
     //TODO: EVTL HIER UMÄNDERN, WENN ICH PROCEDURE/FUNCTION UNTEN NACH LLK GEMACHT HAB
     (PROCEDURE())*
     (FUNCTION())*
-    statement = STATEMENT("main")
+    statement = STATEMENT()
     { return varDecl + statement; }
 }
 
-void CONSTDECL(String scope) :
+void CONSTDECL() :
 {}
 {
-    (<FINAL> <INT> CONSTZUW(scope) CONSTLIST(scope) ";")?
+    (<FINAL> <INT> CONSTZUW() CONSTLIST() ";")?
 }
 
-void CONSTZUW(String scope):
+void CONSTZUW():
 { String constName; }
 {
     <IDENT>
@@ -96,52 +107,53 @@ void CONSTZUW(String scope):
     "="
     <NUMBER>
     {
-        compiler.addConstant(scope, constName, token.image);
+        compiler.addConstant(constName, token.image);
     }
 }
 
-void CONSTLIST(String scope):
+void CONSTLIST():
 {}
 {
-    ("," CONSTZUW(scope))*
+    ("," CONSTZUW())*
 }
 
-String VARDECL(String scope):
+String VARDECL():
 {String varDecl = "";}
 {
     (
         <INT>
-        { varDecl = VARZUW(scope) + VARLIST(scope); }
+        { varDecl = VARZUW() + VARLIST(); }
         ";"
     )?
-   { return varDecl; }
+   { //System.out.println("DU SCHAFFST DAS \n\n");
+    return varDecl; }
 }
 
-String VARZUW(String scope):
-{ String varName, result = ""; }
+String VARZUW():
+{String varName, result = ""; }
 {
     <IDENT>
     {
         //fügt die Variable in die Hashtable ein und speichert sich den Index
         varName = token.image;
-        result = compiler.declareVariable(scope, varName);
+        result = compiler.declareVariable(varName);
     }
     (
         "=" <NUMBER>
         {
             //Falls variable doch initialisiert wird, dann erstelle hier den passenden code
-            result = compiler.initVariable(scope, varName, token.image);
+            result = compiler.initVariable(varName, token.image);
         }
     )?
     { return result; }
 }
 
-String VARLIST(String scope):
+String VARLIST():
 {String varDecl = "";}
 {
     (
         ","
-        { varDecl = varDecl + VARZUW(scope); }
+        { varDecl = varDecl + VARZUW(); }
     )*
     { return varDecl; }
 }
@@ -150,25 +162,23 @@ String VARLIST(String scope):
    HALT PROCEDURE_LIST UND SO KACKE
    * */
 void PROCEDURE():
-{String scope, routinenparameter = "", routinenblock = "";}
+{String routinenparameter = "", routinenblock = "";}
 {
     <VOID>
     <IDENT>
-    //Er erstellt über den Compiler ein neues Method Objekt der Prozedur und fügt es der ArrayList hinzu
-    {scope = token.image;
-    methods.add(compiler.createProcedure(routinenparameter, false));}
+    {compiler.createMethod(token.image, false);}
 
     "("
         (
-            routinenparameter = ROUTINENPARAMETER(scope)
-            {compiler.defineParameters(scope, routinenparameter);}
+            routinenparameter = ROUTINENPARAMETER()
+            {compiler.defineParameters(routinenparameter);}
         )?
     ")"
 
     "{"
         (
-            routinenblock = ROUTINENBLOCK(scope)
-            {compiler.generateProcedureCode(scope, routinenblock);}
+            routinenblock = ROUTINENBLOCK()
+            {compiler.generateProcedureCode(routinenblock);}
         )?
     "}"
 
@@ -178,49 +188,63 @@ void PROCEDURE():
    HALT FUNCTION_LIST UND SO KACKE
    * */
 void FUNCTION():
-{String scope, routinenparameter = "", routinenblock = "";}
+{String routinenparameter = "", routinenblock = "";}
 {
+    //TODO: MACH PROCEDURE ERSTMAL FERTIG, DANN FANG HIERMIT AN
     <VOID>
     <IDENT>
-    {scope = token.image;}
-    "(" (routinenparameter = ROUTINENPARAMETER(scope))? ")"
+    "(" (routinenparameter = ROUTINENPARAMETER())? ")"
     "{"
-    //TODO: HIER WEITERMACHEN
-        (routinenblock = ROUTINENBLOCK(scope))?
+
+        (routinenblock = ROUTINENBLOCK())?
         <RETURN> EXPRESSION() ";"
     "}"
 }
 
-String ROUTINENPARAMETER(String scope):
+/*TODO: WENN DAS HIER FAXEN MACHT DANN BENUTZE DIE LLk VARIANTE UNTEN*/
+String ROUTINENPARAMETER():
+{String routinenparameter = "";}
+{
+    <INT>
+    <IDENT>
+    {routinenparameter = token.image + " ";}
+    (
+        "," <INT>
+        <IDENT>
+        {routinenparameter = routinenparameter + token.image + " ";}
+    )*
+    {return routinenparameter;}
+}
+
+/*String ROUTINENPARAMETER():
 {String routinenparameter = "";}
 {
     //TODO: HIER WEITERMACHEN
-    <INT> <IDENT> ROUTINENPARAMETER_LIST(scope)
+    <INT> <IDENT> ROUTINENPARAMETER_LIST()
     {return "";}
 }
 
-String ROUTINENPARAMETER_LIST(String scope):
+String ROUTINENPARAMETER_LIST():
 {}
 {
     //TODO: HIER WEITERMACHEN
     (
-        "," <INT> <IDENT> ROUTINENPARAMETER_LIST(scope)
+        "," <INT> <IDENT> ROUTINENPARAMETER_LIST()
     )?
     {return "";}
-}
+}*/
 
-String ROUTINENBLOCK(String scope):
+String ROUTINENBLOCK():
 {String varDecl, statement;}
 {
-    //Das wird hier nicht mit ? gemacht weil CONSTDECL selber schon optional ist, wurde für LLk verbessert du weißt
-    CONSTDECL(scope)
-    varDecl = VARDECL(scope)
-    statement = STATEMENT(scope)
+    CONSTDECL()
+    varDecl = VARDECL()
+    statement = STATEMENT()
     {return varDecl + statement;}
 }
 
 String EXPRESSION():
-{ String term, summe; }
+{String term, summe; }
 {
     term = TERM()
     //term wird hier SUMME übergeben, damit der linke Operand in der Methode auch zugänglich ist
@@ -230,7 +254,7 @@ String EXPRESSION():
 
 //Codeerzeugung genau wie Postfixtrafo aus P3
 String SUMME(String term):
-{ String left, right, op = null; }
+{String left, right, op = null; }
 {
     { left = term; }
     (
@@ -250,7 +274,7 @@ String SUMME(String term):
 }
 
 String TERM():
-{ String faktor, product; }
+{String faktor, product; }
 {
     faktor = FAKTOR()
     product = PRODUCT(faktor)
@@ -258,7 +282,7 @@ String TERM():
 }
 
 String PRODUCT(String faktor):
-{ String left, right, op = null; }
+{String left, right, op = null; }
 {
     { left = faktor; }
     (
@@ -277,7 +301,7 @@ String PRODUCT(String faktor):
 }
 
 String FAKTOR():
-{ String number, expression; }
+{String number, expression; }
 {
     <NUMBER>
     {
@@ -286,8 +310,10 @@ String FAKTOR():
         return "10 " + String.format("%02x", Integer.parseInt(number)) + " ";
     }
     |
+
+    <IDENT>
     //TODO: HIER WEITERMACHEN
-    <IDENT> (FUNCTIONCALL())?
+    (FUNCTIONCALL())?
     {
         return compiler.generateIdentCode(token.image);
     }
@@ -310,7 +336,7 @@ String CONDITION():
    FUNCTIONCALL = "(" (EXPRESSION FUNCTIONCALL_LIST)? ")"
    FUNCTIONCALL_LIST = , EXPRESSION FUNCTIONCALL_LIST | eps
    * */
-//TODO: HIER AUF STRING UMSTELLEN UND RETURN WENN ICH UMGESETZT HABE
+  //TODO: HIER AUF STERING UMSTELLEN WENN ICH UMGESETZTR HABE
 void FUNCTIONCALL():
 {}
 {
@@ -329,8 +355,7 @@ void FUNCTIONCALL():
    FUNCTIONCALL = "(" (EXPRESSION FUNCTIONCALL_LIST)? ")"
    FUNCTIONCALL_LIST = , EXPRESSION FUNCTIONCALL_LIST | eps
    * */
-//TODO: HIER AUF STRING UMSTELLEN UND RETURN WENN ICH UMGESETZT HABE
-void PROCCALL():
+String PROCCALL():
 {}
 {
     //TODO: HIER WEITERMACHEN
@@ -342,9 +367,10 @@ void PROCCALL():
             )*
         )?
     ")"
+    {return "";}
 }
 
-String STATEMENT(String scope):
+String STATEMENT():
 {String expression = "", ident = "", statement = "", condition = "", optElse = "";}
 {
     <IDENT>
@@ -352,7 +378,7 @@ String STATEMENT(String scope):
     (
         "="
         expression = EXPRESSION()
-        { return expression + "36 " +  compiler.getVariable(scope, ident) + " "; }
+        { return expression + "36 " +  compiler.getVariable(ident) + " "; }
 
         |
 
@@ -368,48 +394,48 @@ String STATEMENT(String scope):
 
     |
 
-    "{" statement = STMTLIST(scope) "}"
+    "{" statement = STMTLIST() "}"
     { return statement; }
 
     |
 
     <IF>
     condition = CONDITION()
-    statement = STATEMENT(scope)
-    optElse = OPTELSE(scope)
+    statement = STATEMENT()
+    optElse = OPTELSE()
     { return compiler.generateIfCode(condition, statement, optElse); }
 
     |
 
     <WHILE>
     condition = CONDITION()
-    statement = STATEMENT(scope)
+    statement = STATEMENT()
     { return compiler.generateWhileCode(condition, statement); }
 }
 
-String OPTELSE(String scope):
+String OPTELSE():
 {String statement = "";}
 {
     (
     <ELSE>
-    statement = STATEMENT(scope)
+    statement = STATEMENT()
     {return statement;}
     )?
     {return "";}
 }
 
-String STMTLIST(String scope):
+String STMTLIST():
 {String statement = "", singleStatement = "";}
 {
     (
-     singleStatement = STATEMENT(scope)
+     singleStatement = STATEMENT()
      {statement = statement + singleStatement;}
     )*
     {return statement;}
 }
 
 String start():
-{ String result; }
+{String result; }
 {
     result = PROGRAM()
     <EOF> { return compiler.resolveLabels(result + "b1 "); }

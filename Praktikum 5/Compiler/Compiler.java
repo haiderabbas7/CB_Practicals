@@ -4,43 +4,69 @@ import Compiler.SymbolTable;
 import Compiler.Method;
 import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Hashtable;
 
 public class Compiler {
     private static SymbolTable mainSymbolTable;
-    private static LabelGenerator labelGenerator = new LabelGenerator();
+    //private static LabelGenerator labelGenerator = new LabelGenerator();
     private Hashtable<String, Method> methods = new Hashtable<String, Method>();
+    private Hashtable<String, LabelGenerator> labelgenerators = new Hashtable<String, LabelGenerator>();
+    private static String currentScope = "main";
 
     public Compiler() {
         this.methods.put("main", new Method("main", false, 1));
+        this.labelgenerators.put("main", new LabelGenerator());
     }
 
-    public SymbolTable getSymbolTable(String scope){
-        return this.methods.get(scope).getSymbolTable();
+    //TODO: GPT CODE
+    public ArrayList<Method> getMethodsListWithoutMain() {
+        ArrayList<Method> methodList = new ArrayList<>(methods.values());
+        methodList.removeIf(method -> "main".equals(method.getName()));
+        return methodList;
     }
 
-    public void addConstant(String scope, String constname, String number){
-        this.getSymbolTable(scope).addConstant(constname, number);
+    //Gibt eine Methode nach Namen aus. Wenn nix angegeben dann wird eifnach der momentane Scope returned
+    public Method getMethod(String name) {
+        return methods.get(name);
+    }
+    public Method getMethod() {
+        return getMethod(currentScope);
     }
 
-    public String getVariable(String scope, String ident){
-        return this.getSymbolTable(scope).getVariable(ident);
+    //Gibt den LabelGenerator der Methode nach Namen aus. Wenn nix angegeben dann wird eifnach der momentane Scope returned
+    public LabelGenerator getLabelGenerator(String name) {
+        return labelgenerators.get(name);
+    }
+    public LabelGenerator getLabelGenerator() {
+        return getLabelGenerator(currentScope);
+    }
+
+    public void resetScope(){
+        currentScope = "main";
+    }
+
+    public SymbolTable getSymbolTable(){
+        return this.methods.get(currentScope).getSymbolTable();
+    }
+
+    public void addConstant(String constname, String number){
+        this.getSymbolTable().addConstant(constname, number);
+    }
+
+    public String getVariable(String ident){
+        return this.getSymbolTable().getVariable(ident);
     }
 
     //deklariert die Variable in der symboltabelle und gibt den bytecode dafür zurück
-    public String declareVariable(String scope, String varName) {
-        try{
-            String varIndex = this.getSymbolTable(scope).addVariable(varName);
-            return "10 00 36 " + varIndex + " ";
-        } catch(Exception e){
-            System.err.println(e.getMessage());
-            throw new Error(e);
-        }
+    public String declareVariable(String varName) {
+        String varIndex = this.getSymbolTable().addVariable(varName);
+        return "10 00 36 " + varIndex + " ";
     }
 
     //gibt den Code zurück, um die Variable zu initialisieren
-    public String initVariable(String scope, String varName, String varValue) {
+    public String initVariable(String varName, String varValue) {
         try {
-            String varIndex = String.format("%02x", Integer.parseInt(this.getSymbolTable(scope).getSymbolObject(varName).getValue()));
+            String varIndex = String.format("%02x", Integer.parseInt(this.getSymbolTable().getSymbolObject(varName).getValue()));
             return "10 " + String.format("%02x", Integer.parseInt(varValue)) + " 36 " + varIndex + " ";
         } catch(Exception e){
             System.err.println(e.getMessage());
@@ -52,8 +78,8 @@ public class Compiler {
     public String generateIdentCode(String ident){
         try{
             //prüft ob der Identifier eine Variable ist
-            boolean isVariable = mainSymbolTable.isVariable(ident);
-            String hashMapValue = mainSymbolTable.getSymbol(ident);
+            boolean isVariable = this.getSymbolTable().isVariable(ident);
+            String hashMapValue = this.getSymbolTable().getSymbol(ident);
             //Variable = erzeug 15 für LOAD, Konstante = 10 für Laden der Konstante
             return (isVariable ? "15 " : "10 ") + hashMapValue + " ";
         } catch(Exception e){
@@ -100,11 +126,11 @@ public class Compiler {
         try {
             //LN für Labelanfang, XN für Labelende
             String res = condition;
-            int anext = labelGenerator.getLabel();
+            int anext = this.getLabelGenerator().getLabel();
             res += "00 L" + anext + " "  //(JMC) anext
                     + statement;        //stmt1
             if(optElse != ""){
-                int anext_plus_1 = labelGenerator.getLabel();
+                int anext_plus_1 = this.getLabelGenerator().getLabel();
                 res += "a7 00 L" + anext_plus_1 + " "    //JMP anext+1
                         + "X" + anext + " "           //anext:
                         + optElse                       //stmt2
@@ -124,8 +150,8 @@ public class Compiler {
 
     public String generateWhileCode(String condition, String statement){
         try {
-            int anext = labelGenerator.getLabel();
-            int anext_plus_1 = labelGenerator.getLabel();
+            int anext = this.getLabelGenerator().getLabel();
+            int anext_plus_1 = this.getLabelGenerator().getLabel();
             String res = "X" + anext + " "      //anext: ...
                     + condition                 //...cond1 und JMC...
                     + "00 L" + anext_plus_1 + " "  //...anext+1
@@ -144,7 +170,7 @@ public class Compiler {
     public String resolveLabels(String program){
         System.out.println("\nPROGRAM VOR AUFLOESUNG:\n" + program + "\n\n");
         String programString = program;
-        int labelCount = labelGenerator.getLabelCount();
+        int labelCount = this.getLabelGenerator().getLabelCount();
 
         for(int i = 0; i < labelCount; i++){
             //Bytecode anhand der Whitespaces in Array packen
@@ -163,7 +189,7 @@ public class Compiler {
                 for(int y = 0; y < programList.size(); y++){
                     if(programList.get(y).charAt(0) == 'X' && Integer.parseInt(programList.get(y).substring(1)) == y){
                         programList.remove(y);
-                        System.out.println("Temporarily removed " + x);
+                        //System.out.println("Temporarily removed " + x);
                     }
                 }
             }
@@ -203,22 +229,35 @@ public class Compiler {
 
 
     //sobald der Scope bekannt ist wird hier das Method objekt mit der dazugehörigen SymbolTabelle erstellt
-    public Method createMethod(String scope, boolean isFunction){
-        this.methods.put(scope, new Method(), isFunction);
+    public void createMethod(String name, boolean isFunction){
+        this.methods.put(name, new Method(name, isFunction));
+        currentScope = name;
     }
 
     //Hier werden nur die Parameter in der SymbolTabelle verankert
-    public void defineParameters(String scope, String routinenparameter){
-        //TODO: HIER WEITER
+    public void defineParameters(String routinenparameter){
+        //routinenparameter kommt als String an Parameter an, durch Spaces separiert: zb. a b c index
+        String[] parameters = routinenparameter.split(" ");
+        //Setzt die Anzahl an parameter, ist fürs erstellen der MethodObjects im Parser wichtig
+        this.getMethod().setParameterAmount(parameters.length);
+        //Er fügt jede Variable in die Symboltabelle der Methode ein
+        for(String variable : parameters){
+            this.getSymbolTable().addVariable(variable);
+        }
     }
 
     //Hier wird der Code der Prozedur erstellt und dem entsprechenden Method object zurückgegeben
-    public void generateProcedureCode(String scope, String routinenblock){
-        //TODO: HIER WEITER
+    public void generateProcedureCode(String routinenblock){
+        String procCode = routinenblock + "b1 ";
+        System.out.println("Proccode: " + procCode);
+        //TODO: HIER MÜSSEN NOCH LABELS AUFGELÖST WERDEN
+        this.getMethod().setBytecode(procCode);
+        resetScope();
     }
 
     //Hier wird der Code der Funktion erstellt und dem entsprechenden Method object zurückgegeben
-    public void generateFunctionCode(String scope, String routinenblock){
-        //TODO: HIER WEITER
+    public void generateFunctionCode(String routinenblock){
+        //TODO: HIER WEITER, MUSST DAS RETURN KORREKT USMETZEN DU WEIßT
+        resetScope();
     }
 }

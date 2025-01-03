@@ -25,16 +25,21 @@ public class SymbolTable {
         }
     }
 
-    public String addVariable(String ident) throws SymbolAlreadyDefinedException {
-        if (symbolTabelle.containsKey(ident)) {
-            throw new SymbolAlreadyDefinedException("Variable " + ident + " wurde schon definiert.");
-        } else {
-            Symbol symbol = new Symbol(ident, Integer.toString(nextIndex), true);
-            symbolTabelle.put(ident, symbol);
-            //nächste Variable hat den nächsten Index
-            this.nextIndex = this.nextIndex + 1;
-            //stellt sicher dass immer zweistellig zurückgegeben wird
-            return String.format("%02d", this.nextIndex - 1);
+    public String addVariable(String ident) {
+        try {
+            if (symbolTabelle.containsKey(ident)) {
+                throw new SymbolAlreadyDefinedException("Variable " + ident + " wurde schon definiert.");
+            } else {
+                Symbol symbol = new Symbol(ident, Integer.toString(nextIndex), true);
+                symbolTabelle.put(ident, symbol);
+                // nächste Variable hat den nächsten Index
+                this.nextIndex = this.nextIndex + 1;
+                // stellt sicher dass immer zweistellig zurückgegeben wird
+                return String.format("%02d", this.nextIndex - 1);
+            }
+        } catch (SymbolAlreadyDefinedException e) {
+            System.err.println(e.getMessage());
+            throw new Error(e);
         }
     }
 
