@@ -5,10 +5,11 @@ import Compiler.Exceptions.*;
 
 public class SymbolTable {
     private Hashtable<String, Symbol> symbolTabelle = new Hashtable<String, Symbol>();
-    private int nextIndex = 1;
+    //DER FUCKING FEHLER WAR HIER, WEIL ICH INDIZES BEI 1 ANFANGEN LIEß
+    private int nextIndex = 0;
 
     public SymbolTable(){
-        this.nextIndex = 1;
+        this.nextIndex = 0;
     }
 
     public void addConstant(String ident, String value) {

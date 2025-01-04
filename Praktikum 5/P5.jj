@@ -17,49 +17,43 @@ Code mit Zuweisungen, Statementblöcke, if else und while
 //PARSER FÜR MINIJAVA
 PARSER_BEGIN(P5)
     import java.util.ArrayList;
-    import Compiler.*;
+import Compiler.*;
 
-    public class P5 {
-        private static Compiler compiler = new Compiler();
+public class P5 {
+    private static Compiler compiler = new Compiler();
 
-	    public static void main (String[] args ) {
-		    P5 parser = new P5(System.in);
-               String main = "";
-		    try {
-		    	main = parser.start();
-		    } catch (ParseException e) {
-		    	System.err.println(e);
-		    }
+ public static void main (String[] args ) {
+  P5 parser = new P5(System.in);
+           String main = "";
+  try {
+  	main = parser.start();
+  } catch (ParseException e) {
+  	System.err.println(e);
+  }
 
-            /*
-            JAVA DOC FÜR METHODOBJECT, WEIL DAS HIER NICHT LÄDT:
-            Hat drei Variablen name, argsSize und byteCode
-            - name natürlich der Name der Methode, zb main unten
-            - argsSize eben die Anzahl der Parameter, zb main hat ja nur einen, das String[] args
-            - bytecode eben ein String welcher den Bytecode enthält, zb unten für die main packe ich das in den String main
-            => METHODOBJECT KLASSE HAT AUCH GETTER UND SETTER FÜR DIESE VARIABLEN
-             */
-            //TODO: hier muss für jedes Method objekt aus der ArrayList  ein MethodObject erstellt werden du weißt
-            //Erstellt eine ArrayListe für die MethodObjects, erstellt die Main und fügt diese der Liste hinzu
-            ArrayList<JavaClassFileGenerator.MethodObject> methodObjects = new ArrayList<JavaClassFileGenerator.MethodObject>();
-            JavaClassFileGenerator.MethodObject mainMethod = new JavaClassFileGenerator.MethodObject("main", 1, main);
-            methodObjects.add(mainMethod);
 
-            //Holt sich alle Methoden vom Compiler ohne die Main methode, erstellt MethodObjects und fügt diese der Liste hinzu
-            ArrayList<Method> methods = compiler.getMethodsListWithoutMain();
-            for(Method method : methods){
-                JavaClassFileGenerator.MethodObject anotherMethod = new JavaClassFileGenerator.MethodObject(
-                        method.getName(),
-                        method.getParameterAmount(),
-                        method.getBytecode()
-                );
-                methodObjects.add(anotherMethod);
-            }
-            JavaClassFileGenerator.JavaClassFileGenerator classGenerator = new JavaClassFileGenerator.JavaClassFileGenerator("myClass", true, false, true);
-            compiler.printAllSymbolTables();
-            classGenerator.generateClassFile(methodObjects.toArray(new JavaClassFileGenerator.MethodObject[0]));
-	    }
-    }
+        //Erstellt eine ArrayListe für die MethodObjects, erstellt die Main und fügt diese der Liste hinzu
+        ArrayList<JavaClassFileGenerator.MethodObject> methodObjects = new ArrayList<JavaClassFileGenerator.MethodObject>();
+        JavaClassFileGenerator.MethodObject mainMethod = new JavaClassFileGenerator.MethodObject("main", 1, main);
+        methodObjects.add(mainMethod);
+        System.out.println("Added " + mainMethod);
+
+        //Holt sich alle Methoden vom Compiler ohne die Main methode, erstellt MethodObjects und fügt diese der Liste hinzu
+        ArrayList<Method> methods = compiler.getMethodsListWithoutMain();
+        for(Method method : methods){
+            JavaClassFileGenerator.MethodObject anotherMethod = new JavaClassFileGenerator.MethodObject(
+                    method.getName(),
+                    method.getParameterAmount(),
+                    method.getBytecode()
+            );
+            methodObjects.add(anotherMethod);
+            System.out.println("Added " + anotherMethod);
+        }
+        JavaClassFileGenerator.JavaClassFileGenerator classGenerator = new JavaClassFileGenerator.JavaClassFileGenerator("myClass", true, false, true);
+        compiler.printAllSymbolTables();
+        classGenerator.generateClassFile(methodObjects.toArray(new JavaClassFileGenerator.MethodObject[0]));
+ }
+}
 PARSER_END(P5)
 
 SKIP:

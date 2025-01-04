@@ -8,7 +8,6 @@ import java.util.Hashtable;
 
 public class Compiler {
     private static SymbolTable mainSymbolTable;
-    //private static LabelGenerator labelGenerator = new LabelGenerator();
     private Hashtable<String, Method> methods = new Hashtable<String, Method>();
     private Hashtable<String, LabelGenerator> labelgenerators = new Hashtable<String, LabelGenerator>();
     private static String currentScope = "main";
@@ -259,9 +258,9 @@ public class Compiler {
     //Hier wird der Code der Prozedur erstellt und dem entsprechenden Method object zurückgegeben
     public void generateProcedureCode(String routinenblock){
         String procCode = routinenblock + "b1 ";
-        System.out.println("Proccode: " + procCode);
         String resolvedCode = this.resolveLabels(procCode);
         this.getMethod().setBytecode(resolvedCode);
+        System.out.println("AUFGELOESTER CODE: " + resolvedCode);
         resetScope();
     }
 

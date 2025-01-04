@@ -48,4 +48,15 @@ public class Method {
     public SymbolTable getSymbolTable() {
         return symbolTable;
     }
+
+    @Override
+    public String toString() {
+        return "Method{" +
+                "name='" + name + '\'' +
+                ", isFunction=" + isFunction +
+                ", parameterAmount=" + parameterAmount +
+                ", symbolTable=" + symbolTable +
+                ", bytecode='" + bytecode + '\'' +
+                '}';
+    }
 }
