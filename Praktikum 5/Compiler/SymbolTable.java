@@ -67,7 +67,7 @@ public class SymbolTable {
             } else {
                 Symbol symbol = symbolTabelle.get(ident);
                 if (!symbol.isVariable()) {
-                    throw new UnknownSymbolException("Symbol " + ident + " ist eine Konstante.");
+                    throw new ConstantException("Symbol " + ident + " ist eine Konstante.");
                 } else {
                     return symbol.getValue();
                 }
@@ -79,13 +79,24 @@ public class SymbolTable {
     }
 
     //returned für den Identifier, ob das Symbol eine Variable oder Konstante ist
-    public boolean isVariable(String ident) throws UnknownSymbolException {
-        if (!symbolTabelle.containsKey(ident)) {
-            throw new UnknownSymbolException("Symbol " + ident + " wurde nicht definiert.");
-        } else {
-            Symbol symbol = symbolTabelle.get(ident);
-            return symbol.isVariable();
+    public boolean isVariable(String ident){
+        try{
+            if (!symbolTabelle.containsKey(ident)) {
+                throw new UnknownSymbolException("Symbol " + ident + " wurde nicht definiert.");
+            }
+            else {
+                Symbol symbol = symbolTabelle.get(ident);
+                return symbol.isVariable();
+            }
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            throw new Error(e);
         }
+    }
+
+    //TODO: GPT CODE
+    public boolean isSymbolAvailable(String ident) {
+        return symbolTabelle.containsKey(ident);
     }
 
     @Override

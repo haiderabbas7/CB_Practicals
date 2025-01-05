@@ -1,5 +1,6 @@
 package Compiler;
 
+import Compiler.Exceptions.*;
 import Compiler.SymbolTable;
 import Compiler.Method;
 import java.util.Arrays;
@@ -73,6 +74,26 @@ public class Compiler {
         }
     }
 
+    //joa erstellt den Code zum laden der Idents, also entweder Variable oder Konstante
+    /*public String generateIdentCode(String ident){
+        try{
+            System.out.println("CURRENT SCOPE: " + currentScope);
+            //prüft ob der Identifier eine Variable ist
+            boolean isVariable = this.getSymbolTable().isVariable(ident);
+            String hashMapValue = this.getSymbolTable().getSymbol(ident);
+            if(this.getSymbolTable().isSymbolAvailable(ident)){
+                //Variable = erzeug 15 für LOAD, Konstante = 10 für Laden der Konstante
+                return (isVariable ? "15 " : "10 ") + hashMapValue + " ";
+            }
+            else{
+                //TODO: HIER MUSS NOCH DAS MIT DEN GLOBALEN VARIABLEN GEMACHT WERDEN
+
+            }
+        } catch(Exception e){
+            System.err.println(e.getMessage());
+            throw new Error(e);
+        }
+    }*/
     //joa erstellt den Code zum laden der Idents, also entweder Variable oder Konstante
     public String generateIdentCode(String ident){
         try{
@@ -166,13 +187,20 @@ public class Compiler {
         }
     }
 
-    public String generateProcCallCode(String procName, String parameters){
-        //procName kommt als String der Procedure an, parameters als fertiger Bytecode
-        //TODO: HIER MUSS GLAUEB ICH DIESE EINE WRONGPARAMETERS EXCEPTION GEWORFEN WERDEN
-        //MACH DAZU VLLT EINE METHODE, WELCHE DIE ANZAHL AN PARAMETERN ÜBERPRÜFT
-        //BZW HOL DIR VOM PARSER DIE ANZAHL AN PARAMETERN NOCH NCIHT ALS CODE IDFK
-        //DIESE GLEICHE METHODE KANNST DU DANN AUCH BEI DEN FUNCTION CALLS NUTZEN
-        return parameters + "b8 (" + procName + ") ";
+    public String generateCallCode(String methodName, int amountOfParameters, String parameters){
+        try{
+            int expectedAmountOfParameters = this.getMethod(methodName).getParameterAmount();
+            if(amountOfParameters != expectedAmountOfParameters){
+                throw new WrongParametersException("Methode " + methodName + " erwartet " + expectedAmountOfParameters
+                        + " Parameter, es wurden aber nur " + amountOfParameters + " bereitgestellt.");
+            }
+            else{
+                return parameters + "b8 (" + methodName + ") ";
+            }
+        } catch(Exception e){
+            System.err.println(e.getMessage());
+            throw new Error(e);
+        }
     }
 
     public String resolveLabels(String program){
@@ -265,8 +293,11 @@ public class Compiler {
     }
 
     //Hier wird der Code der Funktion erstellt und dem entsprechenden Method object zurückgegeben
-    public void generateFunctionCode(String routinenblock){
-        //TODO: MACH HIER NACH DEN PROCEDURES WEITER, MUSST DAS RETURN KORREKT USMETZEN DU WEIßT
+    public void generateFunctionCode(String routinenblock, String returnExpression){
+        String funcCode = routinenblock + returnExpression + "ac ";
+        String resolvedCode = this.resolveLabels(funcCode);
+        this.getMethod().setBytecode(resolvedCode);
+        System.out.println("AUFGELOESTER CODE: " + resolvedCode);
         resetScope();
     }
 

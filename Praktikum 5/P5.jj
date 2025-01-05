@@ -16,31 +16,33 @@ Code mit Zuweisungen, Statementblöcke, if else und while
 
 //PARSER FÜR MINIJAVA
 PARSER_BEGIN(P5)
-    import java.util.ArrayList;
+import java.util.ArrayList;
 import Compiler.*;
 
 public class P5 {
     private static Compiler compiler = new Compiler();
 
- public static void main (String[] args ) {
-  P5 parser = new P5(System.in);
-           String main = "";
-  try {
-  	main = parser.start();
-  } catch (ParseException e) {
-  	System.err.println(e);
-  }
+    public static void main(String[] args) {
+        P5 parser = new P5(System.in);
+        String main = "";
+        try {
+            main = parser.start();
+        } catch (ParseException e) {
+            System.err.println(e);
+        }
 
+        //TODO: IST NUR ZUM TESTEN
+        //main = "10 05 b3 [n] 10 00 36 00 10 01 36 01 10 00 36 02 10 01 36 03 15 03 b2 [n] a2 00 1c 15 01 15 00 60 36 02 15 01 36 00 15 02 36 01 15 03 10 01 60 36 03 a7 ff e2 15 01 b8 (print) b1";
 
-        //Erstellt eine ArrayListe für die MethodObjects, erstellt die Main und fügt diese der Liste hinzu
+        // Erstellt eine ArrayListe für die MethodObjects, erstellt die Main und fügt diese der Liste hinzu
         ArrayList<JavaClassFileGenerator.MethodObject> methodObjects = new ArrayList<JavaClassFileGenerator.MethodObject>();
         JavaClassFileGenerator.MethodObject mainMethod = new JavaClassFileGenerator.MethodObject("main", 1, main);
         methodObjects.add(mainMethod);
         System.out.println("Added " + mainMethod);
 
-        //Holt sich alle Methoden vom Compiler ohne die Main methode, erstellt MethodObjects und fügt diese der Liste hinzu
+        // Holt sich alle Methoden vom Compiler ohne die Main methode, erstellt MethodObjects und fügt diese der Liste hinzu
         ArrayList<Method> methods = compiler.getMethodsListWithoutMain();
-        for(Method method : methods){
+        for (Method method : methods) {
             JavaClassFileGenerator.MethodObject anotherMethod = new JavaClassFileGenerator.MethodObject(
                     method.getName(),
                     method.getParameterAmount(),
@@ -52,7 +54,7 @@ public class P5 {
         JavaClassFileGenerator.JavaClassFileGenerator classGenerator = new JavaClassFileGenerator.JavaClassFileGenerator("myClass", true, false, true);
         compiler.printAllSymbolTables();
         classGenerator.generateClassFile(methodObjects.toArray(new JavaClassFileGenerator.MethodObject[0]));
- }
+    }
 }
 PARSER_END(P5)
 
@@ -71,6 +73,7 @@ TOKEN :
 | <ELSE : "else">
 | <VOID : "void">
 | <RETURN : "return">
+| <FUNCTION : "func">
 | <COMPOP : "!=" | "==" | "<=" | ">=" | ">" | "<">
 | <NUMBER : ("0" | ["1"-"9"] (["0"-"9"])*)>
 | <IDENT : (["a"-"z"] (["a"-"z"] | ["A"-"Z"] | ["0"-"9"])*)>
@@ -81,7 +84,6 @@ String PROGRAM():
 {
     CONSTDECL()
     varDecl = VARDECL()
-    //TODO: EVTL HIER UMÄNDERN, WENN ICH PROCEDURE/FUNCTION UNTEN NACH LLK GEMACHT HAB
     (PROCEDURE())*
     (FUNCTION())*
     statement = STATEMENT()
@@ -153,9 +155,6 @@ String VARLIST():
     { return varDecl; }
 }
 
-/*TODO: WENN ES HIER FAXEN GIBT DANN ÄNDER UM IN LLk
-   HALT PROCEDURE_LIST UND SO KACKE
-   * */
 void PROCEDURE():
 {String routinenparameter = "", routinenblock = "";}
 {
@@ -179,24 +178,33 @@ void PROCEDURE():
 
 }
 
-/*TODO: WENN ES HIER FAXEN GIBT DANN ÄNDER UM IN LLk
-   HALT FUNCTION_LIST UND SO KACKE
-   * */
-void FUNCTION():
-{String routinenparameter = "", routinenblock = "";}
-{
-    //TODO: MACH PROCEDURE ERSTMAL FERTIG, DANN FANG HIERMIT AN
-    <VOID>
-    <IDENT>
-    "(" (routinenparameter = ROUTINENPARAMETER())? ")"
-    "{"
 
-        (routinenblock = ROUTINENBLOCK())?
-        <RETURN> EXPRESSION() ";"
+void FUNCTION():
+{String routinenparameter = "", routinenblock = "", returnExpression = "";}
+{
+    <FUNCTION>
+    <IDENT>
+    {compiler.createMethod(token.image, true);}
+
+    "("
+        (
+            routinenparameter = ROUTINENPARAMETER()
+            {compiler.defineParameters(routinenparameter);}
+        )?
+    ")"
+
+    "{"
+        (
+           routinenblock = ROUTINENBLOCK()
+        )?
+        <RETURN>
+        returnExpression = EXPRESSION() ";"
+        {
+        System.out.println("Parsing RETURN statement: " + returnExpression);
+        compiler.generateFunctionCode(routinenblock, returnExpression);}
     "}"
 }
 
-/*TODO: WENN DAS HIER FAXEN MACHT DANN BENUTZE DIE LLk VARIANTE UNTEN*/
 String ROUTINENPARAMETER():
 {String routinenparameter = "";}
 {
@@ -211,23 +219,6 @@ String ROUTINENPARAMETER():
     {return routinenparameter;}
 }
 
-/*String ROUTINENPARAMETER():
-{String routinenparameter = "";}
-{
-    //TODO: HIER WEITERMACHEN
-    <INT> <IDENT> ROUTINENPARAMETER_LIST()
-    {return "";}
-}
-
-String ROUTINENPARAMETER_LIST():
-{}
-{
-    //TODO: HIER WEITERMACHEN
-    (
-        "," <INT> <IDENT> ROUTINENPARAMETER_LIST()
-    )?
-    {return "";}
-}*/
 
 String ROUTINENBLOCK():
 {String varDecl, statement;}
@@ -296,7 +287,7 @@ String PRODUCT(String faktor):
 }
 
 String FAKTOR():
-{String number, expression; }
+{String number, expression, funcCall = ""; }
 {
     <NUMBER>
     {
@@ -307,8 +298,10 @@ String FAKTOR():
     |
 
     <IDENT>
-    //TODO: HIER WEITERMACHEN
-    (FUNCTIONCALL())?
+    (
+        funcCall = FUNCTIONCALL(token.image)
+        {return funcCall;}
+    )?
     {
         return compiler.generateIdentCode(token.image);
     }
@@ -325,45 +318,44 @@ String CONDITION():
     { return compiler.generateConditionCode(left, right, compOP);}
 }
 
-
-
-/*TODO: WENN ES HIER FAXEN GIBT DANN ÄNDER UM IN LLk, ALSO
-   FUNCTIONCALL = "(" (EXPRESSION FUNCTIONCALL_LIST)? ")"
-   FUNCTIONCALL_LIST = , EXPRESSION FUNCTIONCALL_LIST | eps
-   * */
-  //TODO: HIER AUF STERING UMSTELLEN WENN ICH UMGESETZTR HABE
-void FUNCTIONCALL():
-{}
-{
-    //TODO: HIER WEITERMACHEN
-    "("
-        (
-            EXPRESSION()
-            (
-                "," EXPRESSION()
-            )*
-        )?
-    ")"
-}
-
-/*TODO: WENN ES HIER FAXEN GIBT DANN ÄNDER UM IN LLk, ALSO
-   FUNCTIONCALL = "(" (EXPRESSION FUNCTIONCALL_LIST)? ")"
-   FUNCTIONCALL_LIST = , EXPRESSION FUNCTIONCALL_LIST | eps
-   * */
-String PROCCALL(String procName):
-{String parameters = "", singleParameter = "";}
+String FUNCTIONCALL(String funcName):
+{String parameters = "", singleParameter = ""; int amountOfParameters = 0;}
 {
     "("
         (
             parameters = EXPRESSION()
+            {amountOfParameters++;}
             (
                 ","
                 singleParameter = EXPRESSION()
-                {parameters = parameters + singleParameter;}
+                {
+                    parameters = parameters + singleParameter;
+                    amountOfParameters++;
+                }
             )*
         )?
     ")"
-    {return compiler.generateProcCallCode(procName, parameters);}
+    {return compiler.generateCallCode(funcName, amountOfParameters, parameters);}
+}
+
+String PROCCALL(String procName):
+{String parameters = "", singleParameter = ""; int amountOfParameters = 0;}
+{
+    "("
+        (
+            parameters = EXPRESSION()
+            {amountOfParameters++;}
+            (
+                ","
+                singleParameter = EXPRESSION()
+                {
+                    parameters = parameters + singleParameter;
+                    amountOfParameters++;
+                }
+            )*
+        )?
+    ")"
+    {return compiler.generateCallCode(procName, amountOfParameters, parameters);}
 }
 
 String STATEMENT():
@@ -382,7 +374,6 @@ String STATEMENT():
         procCall = PROCCALL(ident) ";"
         { return procCall; }
     )
-
 
     |
 

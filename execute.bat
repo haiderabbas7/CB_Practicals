@@ -35,7 +35,9 @@ for %%f in (*) do (
 )
 
 rem Lösche alle .class Dateien im aktuellen Verzeichnis und allen Unterverzeichnissen
-del /s *.class
+rem del /s *.class
+del *.class
+del ./Compiler/*.class
 
 rem Führe javacc mit der angegebenen Datei aus
 javacc %JJ_FILE%
@@ -54,13 +56,8 @@ if "%JAVA_COUNT%"=="0" (
     exit /b 1
 )
 
+javac ./Compiler/Exceptions/*.java
+
 rem Kompiliere alle Java-Dateien
 javac *.java
 
-rem Überprüfe, ob javac erfolgreich war
-if errorlevel 1 (
-    echo Fehler beim Kompilieren der .java Dateien.
-    exit /b 1
-)
-
-echo Kompilierung erfolgreich.
