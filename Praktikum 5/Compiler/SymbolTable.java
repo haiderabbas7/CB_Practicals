@@ -12,6 +12,36 @@ public class SymbolTable {
         this.nextIndex = 0;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("SymbolTable:\n");
+        for (String key : symbolTabelle.keySet()) {
+            Symbol symbol = symbolTabelle.get(key);
+            sb.append("Identifier: ").append(key)
+                    .append(", Value: ").append(symbol.getValue())
+                    .append(", IsVariable: ").append(symbol.isVariable())
+                    .append("\n");
+        }
+        return sb.toString();
+    }
+
+    public String getSymbol(String ident) throws UnknownSymbolException {
+        if (!symbolTabelle.containsKey(ident)) {
+            throw new UnknownSymbolException("Symbol " + ident + " wurde nicht definiert.");
+        } else {
+            return symbolTabelle.get(ident).getValue();
+        }
+    }
+
+    public Symbol getSymbolObject(String ident) throws UnknownSymbolException {
+        if (!symbolTabelle.containsKey(ident)) {
+            throw new UnknownSymbolException("Symbol " + ident + " wurde nicht definiert.");
+        } else {
+            return symbolTabelle.get(ident);
+        }
+    }
+
     public void addConstant(String ident, String value) {
         try {
             if (symbolTabelle.containsKey(ident)) {
@@ -43,24 +73,7 @@ public class SymbolTable {
         }
     }
 
-    public String getSymbol(String ident) throws UnknownSymbolException {
-        if (!symbolTabelle.containsKey(ident)) {
-            throw new UnknownSymbolException("Symbol " + ident + " wurde nicht definiert.");
-        } else {
-            return symbolTabelle.get(ident).getValue();
-        }
-    }
-
-    public Symbol getSymbolObject(String ident) throws UnknownSymbolException {
-        if (!symbolTabelle.containsKey(ident)) {
-            throw new UnknownSymbolException("Symbol " + ident + " wurde nicht definiert.");
-        } else {
-            return symbolTabelle.get(ident);
-        }
-    }
-
     //returned für den Identifier den Index der Variable, sonst bei Konstante Exception
-    //TODO: GPT CODE
     public String getVariable(String ident) throws LWertException, ConstantException {
         if (!symbolTabelle.containsKey(ident)) {
             throw new LWertException("Symbol " + ident + " wurde nicht definiert.");
@@ -84,19 +97,5 @@ public class SymbolTable {
             Symbol symbol = symbolTabelle.get(ident);
             return symbol.isVariable();
         }
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("SymbolTable:\n");
-        for (String key : symbolTabelle.keySet()) {
-            Symbol symbol = symbolTabelle.get(key);
-            sb.append("Identifier: ").append(key)
-                    .append(", Value: ").append(symbol.getValue())
-                    .append(", IsVariable: ").append(symbol.isVariable())
-                    .append("\n");
-        }
-        return sb.toString();
     }
 }

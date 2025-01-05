@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.ArrayList;
 
 public class CompilerHelper {
-    // Splits all function calls in the bytecode like (print) into two dummy bytes
     public static String[] splitAllFunctionCalls(String[] programArray) {
         ArrayList<String> result = new ArrayList<>();
         String dummyByte = "WW";

@@ -18,13 +18,6 @@ public class Compiler {
         this.labelgenerators.put("main", new LabelGenerator());
     }
 
-    //TODO: GPT CODE
-    public ArrayList<Method> getMethodsListWithoutMain() {
-        ArrayList<Method> methodList = new ArrayList<>(methods.values());
-        methodList.removeIf(method -> "main".equals(method.getName()));
-        return methodList;
-    }
-
     //Gibt eine Methode nach Namen aus. Wenn nix angegeben dann wird eifnach der momentane Scope returned
     public Method getMethod(String name) {
         return methods.get(name);
@@ -41,10 +34,6 @@ public class Compiler {
         return getLabelGenerator(currentScope);
     }
 
-    public void resetScope(){
-        currentScope = "main";
-    }
-
     public SymbolTable getSymbolTable(String name) {
         return this.methods.get(name).getSymbolTable();
     }
@@ -52,11 +41,29 @@ public class Compiler {
         return getSymbolTable(currentScope);
     }
 
+    public ArrayList<Method> getMethodsListWithoutMain() {
+        ArrayList<Method> methodList = new ArrayList<>(methods.values());
+        methodList.removeIf(method -> "main".equals(method.getName()));
+        return methodList;
+    }
+
+    public void resetScope(){
+        currentScope = "main";
+    }
+
+    public void printAllSymbolTables() {
+        System.out.println("Symbol Tables:");
+        for (String methodName : methods.keySet()) {
+            Method method = methods.get(methodName);
+            SymbolTable symbolTable = method.getSymbolTable();
+            System.out.println("Method: " + methodName);
+            System.out.println(symbolTable);
+        }
+    }
+
     public void addConstant(String constname, String number){
         this.getSymbolTable().addConstant(constname, number);
     }
-
-
 
     //deklariert die Variable in der symboltabelle und gibt den bytecode dafür zurück
     public String declareVariable(String varName) {
@@ -88,7 +95,6 @@ public class Compiler {
         }
     }
 
-    //TODO: GPT CODE, VON MIR ETWAS ANGEPASST
     public String generateAssignmentCode(String expression, String ident) {
         try {
             return expression + "36 " + this.getSymbolTable().getVariable(ident) + " ";
@@ -295,7 +301,6 @@ public class Compiler {
         return programString;
     }
 
-
     //sobald der Scope bekannt ist wird hier das Method objekt mit der dazugehörigen SymbolTabelle erstellt
     public void createMethod(String name, boolean isFunction){
         this.methods.put(name, new Method(name, isFunction));
@@ -331,15 +336,5 @@ public class Compiler {
         this.getMethod().setBytecode(resolvedCode);
         System.out.println("AUFGELOESTER CODE: " + resolvedCode);
         resetScope();
-    }
-
-    public void printAllSymbolTables() {
-        System.out.println("Symbol Tables:");
-        for (String methodName : methods.keySet()) {
-            Method method = methods.get(methodName);
-            SymbolTable symbolTable = method.getSymbolTable();
-            System.out.println("Method: " + methodName);
-            System.out.println(symbolTable);
-        }
     }
 }
