@@ -35,9 +35,7 @@ for %%f in (*) do (
 )
 
 rem Lösche alle .class Dateien im aktuellen Verzeichnis und allen Unterverzeichnissen
-rem del /s *.class
-del *.class
-del ./Compiler/*.class
+del /s *.class
 
 rem Führe javacc mit der angegebenen Datei aus
 javacc %JJ_FILE%

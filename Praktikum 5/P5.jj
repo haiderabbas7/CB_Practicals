@@ -366,9 +366,7 @@ String STATEMENT():
         "="
         expression = EXPRESSION() ";"
 
-        { //return expression + "36 " +  compiler.getVariable(ident) + " ";
-            return compiler.generateAssignmentCode(expression, ident);
-         }
+        { return compiler.generateAssignmentCode(expression, ident); }
 
         |
 

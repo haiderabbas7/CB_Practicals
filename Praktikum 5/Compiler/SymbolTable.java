@@ -60,28 +60,10 @@ public class SymbolTable {
     }
 
     //returned für den Identifier den Index der Variable, sonst bei Konstante Exception
-    /*public String getVariable(String ident){
-        try {
-            if (!symbolTabelle.containsKey(ident)) {
-                throw new UnknownSymbolException("Symbol " + ident + " wurde nicht definiert.");
-            } else {
-                Symbol symbol = symbolTabelle.get(ident);
-                if (!symbol.isVariable()) {
-                    throw new ConstantException("Symbol " + ident + " ist eine Konstante.");
-                } else {
-                    return symbol.getValue();
-                }
-            }
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-            throw new Error(e);
-        }
-    }*/
-
     //TODO: GPT CODE
-    public String getVariable(String ident) throws UnknownSymbolException, ConstantException {
+    public String getVariable(String ident) throws LWertException, ConstantException {
         if (!symbolTabelle.containsKey(ident)) {
-            throw new UnknownSymbolException("Symbol " + ident + " wurde nicht definiert.");
+            throw new LWertException("Symbol " + ident + " wurde nicht definiert.");
         }
         else {
             Symbol symbol = symbolTabelle.get(ident);

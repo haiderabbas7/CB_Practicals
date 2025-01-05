@@ -88,34 +88,11 @@ public class Compiler {
         }
     }
 
-    //joa erstellt den Code zum laden der Idents, also entweder Variable oder Konstante
-    /*public String generateIdentCode(String ident){
-        try{
-            System.out.println("CURRENT SCOPE: " + currentScope);
-            //prüft ob der Identifier eine Variable ist
-            boolean isVariable = this.getSymbolTable().isVariable(ident);
-            String hashMapValue = this.getSymbolTable().getSymbol(ident);
-            if(this.getSymbolTable().isSymbolAvailable(ident)){
-                //Variable = erzeug 15 für LOAD, Konstante = 10 für Laden der Konstante
-                return (isVariable ? "15 " : "10 ") + hashMapValue + " ";
-            }
-            else{
-                //TODO: HIER MUSS NOCH DAS MIT DEN GLOBALEN VARIABLEN GEMACHT WERDEN
-
-            }
-        } catch(Exception e){
-            System.err.println(e.getMessage());
-            throw new Error(e);
-        }
-    }*/
-    /*public String getVariable(String ident){
-        return this.getSymbolTable().getVariable(ident);
-    }*/
     //TODO: GPT CODE, VON MIR ETWAS ANGEPASST
     public String generateAssignmentCode(String expression, String ident) {
         try {
             return expression + "36 " + this.getSymbolTable().getVariable(ident) + " ";
-        } catch (UnknownSymbolException e) {
+        } catch (LWertException e) {
             if (declaredStaticVariables.contains(ident)) {
                 return expression + "b3 [" + ident + "] ";
             }
@@ -123,7 +100,7 @@ public class Compiler {
                 System.err.println(e.getMessage() + " Und auch nicht in der Main.");
                 throw new Error(e);
             }
-        } catch (ConstantException e) {
+        } catch (Exception e) {
             System.err.println(e.getMessage());
             throw new Error(e);
         }
@@ -142,9 +119,6 @@ public class Compiler {
                 return "b2 [" + ident + "] ";
             }
             else {
-                //TODO: hier muss vorher überprüft werden ob es ne Konstante ist
-                //Also es kann nur Konstante sein oder nicht da
-                //lad es aus der symboltabelle der Main
                 try{
                     String constValue = this.getSymbolTable("main").getSymbol(ident);
                     return "10 " + constValue + " ";
@@ -238,6 +212,9 @@ public class Compiler {
 
     public String generateCallCode(String methodName, int amountOfParameters, String parameters){
         try{
+            if (!this.methods.containsKey(methodName)) {
+                throw new UnknownMethodException("Methode " + methodName + " existiert nicht.");
+            }
             int expectedAmountOfParameters = this.getMethod(methodName).getParameterAmount();
             if(amountOfParameters != expectedAmountOfParameters){
                 throw new WrongParametersException("Methode " + methodName + " erwartet " + expectedAmountOfParameters
