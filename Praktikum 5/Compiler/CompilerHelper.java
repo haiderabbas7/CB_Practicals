@@ -9,7 +9,7 @@ public class CompilerHelper {
         ArrayList<String> result = new ArrayList<>();
         String dummyByte = "WW";
         for (String s : programArray) {
-            if (s.charAt(0) == '(') {
+            if (s.charAt(0) == '(' || s.charAt(0) == '[') {
                 result.add(dummyByte);
                 result.add(dummyByte);
             } else {

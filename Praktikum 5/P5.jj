@@ -122,8 +122,7 @@ String VARDECL():
         { varDecl = VARZUW() + VARLIST(); }
         ";"
     )?
-   { //System.out.println("DU SCHAFFST DAS \n\n");
-    return varDecl; }
+   { return varDecl; }
 }
 
 String VARZUW():
@@ -367,7 +366,9 @@ String STATEMENT():
         "="
         expression = EXPRESSION() ";"
 
-        { return expression + "36 " +  compiler.getVariable(ident) + " "; }
+        { //return expression + "36 " +  compiler.getVariable(ident) + " ";
+            return compiler.generateAssignmentCode(expression, ident);
+         }
 
         |
 

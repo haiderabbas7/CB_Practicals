@@ -8,9 +8,9 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 
 public class Compiler {
-    private static SymbolTable mainSymbolTable;
     private Hashtable<String, Method> methods = new Hashtable<String, Method>();
     private Hashtable<String, LabelGenerator> labelgenerators = new Hashtable<String, LabelGenerator>();
+    private ArrayList<String> declaredStaticVariables = new ArrayList<String>();
     private static String currentScope = "main";
 
     public Compiler() {
@@ -45,29 +45,43 @@ public class Compiler {
         currentScope = "main";
     }
 
-    public SymbolTable getSymbolTable(){
-        return this.methods.get(currentScope).getSymbolTable();
+    public SymbolTable getSymbolTable(String name) {
+        return this.methods.get(name).getSymbolTable();
+    }
+    public SymbolTable getSymbolTable() {
+        return getSymbolTable(currentScope);
     }
 
     public void addConstant(String constname, String number){
         this.getSymbolTable().addConstant(constname, number);
     }
 
-    public String getVariable(String ident){
-        return this.getSymbolTable().getVariable(ident);
-    }
+
 
     //deklariert die Variable in der symboltabelle und gibt den bytecode dafür zurück
     public String declareVariable(String varName) {
-        String varIndex = this.getSymbolTable().addVariable(varName);
-        return "10 00 36 " + varIndex + " ";
+        if(currentScope != "main"){
+            String varIndex = this.getSymbolTable().addVariable(varName);
+            return "10 00 36 " + varIndex + " ";
+        }
+        else{
+            //Variablendeklaration der Main => muss globale Variable sein
+            declaredStaticVariables.add(varName);
+            return "10 00 b3 [" + varName + "] ";
+        }
     }
 
     //gibt den Code zurück, um die Variable zu initialisieren
     public String initVariable(String varName, String varValue) {
         try {
-            String varIndex = String.format("%02x", Integer.parseInt(this.getSymbolTable().getSymbolObject(varName).getValue()));
-            return "10 " + String.format("%02x", Integer.parseInt(varValue)) + " 36 " + varIndex + " ";
+            if(currentScope != "main"){
+                String varIndex = String.format("%02x", Integer.parseInt(this.getSymbolTable().getSymbolObject(varName).getValue()));
+                return "10 " + String.format("%02x", Integer.parseInt(varValue)) + " 36 " + varIndex + " ";
+            }
+            else{
+                //Variablendeklaration der Main => muss globale Variable sein
+                return "10 " + String.format("%02x", Integer.parseInt(varValue)) + " b3 [" + varName + "] ";
+            }
         } catch(Exception e){
             System.err.println(e.getMessage());
             throw new Error(e);
@@ -94,6 +108,27 @@ public class Compiler {
             throw new Error(e);
         }
     }*/
+    /*public String getVariable(String ident){
+        return this.getSymbolTable().getVariable(ident);
+    }*/
+    //TODO: GPT CODE, VON MIR ETWAS ANGEPASST
+    public String generateAssignmentCode(String expression, String ident) {
+        try {
+            return expression + "36 " + this.getSymbolTable().getVariable(ident) + " ";
+        } catch (UnknownSymbolException e) {
+            if (declaredStaticVariables.contains(ident)) {
+                return expression + "b3 [" + ident + "] ";
+            }
+            else {
+                System.err.println(e.getMessage() + " Und auch nicht in der Main.");
+                throw new Error(e);
+            }
+        } catch (ConstantException e) {
+            System.err.println(e.getMessage());
+            throw new Error(e);
+        }
+    }
+
     //joa erstellt den Code zum laden der Idents, also entweder Variable oder Konstante
     public String generateIdentCode(String ident){
         try{
@@ -102,9 +137,23 @@ public class Compiler {
             String hashMapValue = this.getSymbolTable().getSymbol(ident);
             //Variable = erzeug 15 für LOAD, Konstante = 10 für Laden der Konstante
             return (isVariable ? "15 " : "10 ") + hashMapValue + " ";
-        } catch(Exception e){
-            System.err.println(e.getMessage());
-            throw new Error(e);
+        } catch(UnknownSymbolException e){
+            if (declaredStaticVariables.contains(ident)) {
+                return "b2 [" + ident + "] ";
+            }
+            else {
+                //TODO: hier muss vorher überprüft werden ob es ne Konstante ist
+                //Also es kann nur Konstante sein oder nicht da
+                //lad es aus der symboltabelle der Main
+                try{
+                    String constValue = this.getSymbolTable("main").getSymbol(ident);
+                    return "10 " + constValue + " ";
+                }
+                catch(UnknownSymbolException x){
+                    System.err.println(e.getMessage());
+                    throw new Error(e);
+                }
+            }
         }
     }
 
@@ -216,6 +265,12 @@ public class Compiler {
                     Arrays.asList(
                             CompilerHelper.splitAllFunctionCalls(
                                     programString.split(" "))));
+
+            System.out.println("GESPLITTETER CODE: ");
+            for(String s : programList){
+                System.out.print(s + " ");
+            }
+
 
             /*mit einer forschleife entfernt er alle weiteren schließenden Labels XN
 		    * also wir sind nun bei Label i, es werden also alle Labels Xi+1 bis Xn entfernt
