@@ -1,6 +1,7 @@
 package Compiler;
 
 import Compiler.SymbolTable;
+import Compiler.LabelGenerator;
 
 public class Method {
     private String name;
@@ -8,6 +9,7 @@ public class Method {
     private boolean isFunction;
     private int parameterAmount;
     private SymbolTable symbolTable = new SymbolTable();
+    private LabelGenerator labelGenerator = new LabelGenerator();
     private String bytecode = "";
 
     public Method(String name, boolean isFunction){
@@ -47,6 +49,10 @@ public class Method {
 
     public SymbolTable getSymbolTable() {
         return symbolTable;
+    }
+
+    public LabelGenerator getLabelGenerator() {
+        return labelGenerator;
     }
 
     @Override

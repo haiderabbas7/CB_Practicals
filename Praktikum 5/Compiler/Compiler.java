@@ -9,13 +9,11 @@ import java.util.Hashtable;
 
 public class Compiler {
     private Hashtable<String, Method> methods = new Hashtable<String, Method>();
-    private Hashtable<String, LabelGenerator> labelgenerators = new Hashtable<String, LabelGenerator>();
     private ArrayList<String> declaredStaticVariables = new ArrayList<String>();
     private static String currentScope = "main";
 
     public Compiler() {
         this.methods.put("main", new Method("main", false, 1));
-        this.labelgenerators.put("main", new LabelGenerator());
     }
 
     //Gibt eine Methode nach Namen aus. Wenn nix angegeben dann wird eifnach der momentane Scope returned
@@ -28,7 +26,7 @@ public class Compiler {
 
     //Gibt den LabelGenerator der Methode nach Namen aus. Wenn nix angegeben dann wird eifnach der momentane Scope returned
     public LabelGenerator getLabelGenerator(String name) {
-        return labelgenerators.get(name);
+        return this.methods.get(name).getLabelGenerator();
     }
     public LabelGenerator getLabelGenerator() {
         return getLabelGenerator(currentScope);
@@ -304,7 +302,6 @@ public class Compiler {
     //sobald der Scope bekannt ist wird hier das Method objekt mit der dazugehörigen SymbolTabelle erstellt
     public void createMethod(String name, boolean isFunction){
         this.methods.put(name, new Method(name, isFunction));
-        this.labelgenerators.put(name, new LabelGenerator());
         currentScope = name;
     }
 
