@@ -59,11 +59,18 @@ public class Compiler {
         }
     }
 
+    /**
+     * Fügt die Konstante zur Symboltabelle des momentanen Scopes hinzu
+     * Da es Konstanten sind, muss kein Code returned werden
+     * */
     public void addConstant(String constname, String number){
         this.getSymbolTable().addConstant(constname, number);
     }
 
-    //deklariert die Variable in der symboltabelle und gibt den bytecode dafür zurück
+    /**
+     * Deklariert eine Variable. Falls der Scope main ist, wird der nötige Code für eine statische Variable returned
+     * Sonst wird die Variable der Symboltabelle eingefügt und der Code returned
+     * */
     public String declareVariable(String varName) {
         if(currentScope != "main"){
             String varIndex = this.getSymbolTable().addVariable(varName);
@@ -76,16 +83,19 @@ public class Compiler {
         }
     }
 
-    //gibt den Code zurück, um die Variable zu initialisieren
+    /**
+     * Initialisiert eine Variable. Hier auch abhängig vom Scope, ob main oder nicht
+     * */
     public String initVariable(String varName, String varValue) {
+        String res = "10 " + String.format("%02x", Integer.parseInt(varValue));
         try {
             if(currentScope != "main"){
                 String varIndex = String.format("%02x", Integer.parseInt(this.getSymbolTable().getSymbolObject(varName).getValue()));
-                return "10 " + String.format("%02x", Integer.parseInt(varValue)) + " 36 " + varIndex + " ";
+                return res + " 36 " + varIndex + " ";
             }
             else{
                 //Variablendeklaration der Main => muss globale Variable sein
-                return "10 " + String.format("%02x", Integer.parseInt(varValue)) + " b3 [" + varName + "] ";
+                return res + " b3 [" + varName + "] ";
             }
         } catch(Exception e){
             System.err.println(e.getMessage());
@@ -93,6 +103,26 @@ public class Compiler {
         }
     }
 
+    /**
+     * Generiert den Code für eine Ziffer.
+     * bekommt die Nummer vom Parser und returned es mit nem iload
+     * */
+    public String generateNumberCode(String number){
+        return "10 " + String.format("%02x", Integer.parseInt(number)) + " ";
+    }
+
+    /**
+     * Generiert den Code für ein print-Statement
+     * Bekommt die expression vom Parser und called den Print
+     * */
+    public String generatePrintCode(String expression){
+        return expression + "b8 (print) ";
+    }
+
+    /**
+     * Generiert den Code für eine Zuweisung
+     * Hier auch abhängig vom Scope, bei Main muss getstatic gemacht werden
+     * */
     public String generateAssignmentCode(String expression, String ident) {
         try {
             return expression + "36 " + this.getSymbolTable().getVariable(ident) + " ";

@@ -201,8 +201,7 @@ void FUNCTION():
         )?
         <RETURN>
         returnExpression = EXPRESSION() ";"
-        {
-        compiler.generateFunctionCode(routinenblock, returnExpression);}
+        { compiler.generateFunctionCode(routinenblock, returnExpression); }
     "}"
 }
 
@@ -291,11 +290,8 @@ String FAKTOR():
 {String number, expression, funcCall = ""; }
 {
     <NUMBER>
-    {
-        //im Falle einer Zahl die Zahl einfach alls Hexwert zurückgeben
-        number = token.image;
-        return "10 " + String.format("%02x", Integer.parseInt(number)) + " ";
-    }
+    { return compiler.generateNumberCode(token.image); }
+
     |
 
     <IDENT>
@@ -303,18 +299,20 @@ String FAKTOR():
         funcCall = FUNCTIONCALL(token.image)
         {return funcCall;}
     )?
-    {
-        return compiler.generateIdentCode(token.image);
-    }
+    { return compiler.generateIdentCode(token.image); }
+
     |
-    "(" expression = EXPRESSION() ")" { return expression; }
+
+    "(" expression = EXPRESSION() ")"
+    { return expression; }
 }
 
 String CONDITION():
 {String left = "", right = "", compOP = "";}
 {
     left = EXPRESSION()
-    <COMPOP> {compOP = token.image;}
+    <COMPOP>
+    {compOP = token.image;}
     right = EXPRESSION()
     { return compiler.generateConditionCode(left, right, compOP);}
 }
@@ -367,7 +365,6 @@ String STATEMENT():
     (
         "="
         expression = EXPRESSION() ";"
-
         { return compiler.generateAssignmentCode(expression, ident); }
 
         |
@@ -379,7 +376,7 @@ String STATEMENT():
     |
 
     <PRINT> "(" expression = EXPRESSION() ")" ";"
-    { return expression + "b8 (print) "; }
+    { return compiler.generatePrintCode(expression); }
 
     |
 
@@ -406,19 +403,18 @@ String OPTELSE():
 {String statement = "";}
 {
     (
-    <ELSE>
-    statement = STATEMENT()
-    {return statement;}
+        <ELSE>
+        statement = STATEMENT()
     )?
-    {return "";}
+    {return statement;}
 }
 
 String STMTLIST():
 {String statement = "", singleStatement = "";}
 {
     (
-     singleStatement = STATEMENT()
-     {statement = statement + singleStatement;}
+        singleStatement = STATEMENT()
+        {statement = statement + singleStatement;}
     )*
     {return statement;}
 }
